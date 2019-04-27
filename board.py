@@ -231,7 +231,7 @@ class Position:
         self.pos[y_new][x_new] = piece
 
         # Update PGN
-        # pgn.update_pgn(self.pgn, self.pos, self.fullmove)
+        pgn.update_pgn(self.pgn, self.pos, self.fullmove)
 
         if self.turn:
             self.pgn += str(self.fullmove) + '. '
