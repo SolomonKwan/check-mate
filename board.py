@@ -210,7 +210,7 @@ class Position:
         piece = self.pos[y][x]
         end_piece = self.pos[y_new][x_new]
 
-        # Actually move the piece
+        # Actually move the piece and update piece count
         self.pos[y][x] = ' '
         if end_piece != ' ':
             # Capture move
@@ -230,33 +230,6 @@ class Position:
                 self.piece_count['db'] -= 1
         self.pos[y_new][x_new] = piece
 
-        # Update PGN
-        pgn.update_pgn(self.pgn, self.pos, self.fullmove)
-
-        if self.turn:
-            self.pgn += str(self.fullmove) + '. '
-        if piece == 'k' and not(x == 4 and y == 0) and \
-                (not(x_new == 6 and y_new == 0) or
-                 not(x_new == 2 and y_new == 0)):
-            if end_piece == ' ':
-                self.pgn += 'K' + inv_files[x_new] + inv_ranks[y_new] + ' '
-            else:
-                self.pgn += 'Kx' + inv_files[x_new] + inv_ranks[y_new] + ' '
-        elif piece == 'K' and not (x == 4 and y == 7) and \
-                (not(x_new == 6 and y_new == 7) or
-                 not(x_new == 2 and y_new == 7)):
-            if end_piece == ' ':
-                self.pgn += 'K' + inv_files[x_new] + inv_ranks[y_new] + ' '
-            else:
-                self.pgn += 'Kx' + inv_files[x_new] + inv_ranks[y_new] + ' '
-        elif piece == 'P' or piece == 'p':
-            if en_passant:
-                self.pgn += inv_files[x_new] + 'x' + inv_ranks[y_new] + ' '
-            elif end_piece == ' ':
-                self.pgn += inv_files[x_new] + str(8 - y_new) + ' '
-            else:
-                pass
-
         # Update castling and move rook if castling
         if x == 0 and y == 0:
             self.castling[BLACK_QUEEN_SIDE_CASTLE] = False
@@ -270,32 +243,28 @@ class Position:
             self.castling[BLACK_KING_SIDE_CASTLE] = False
             self.castling[BLACK_QUEEN_SIDE_CASTLE] = False
             if x_new == 6 and y_new == 0 and piece == 'k':
-                self.pgn += str(self.fullmove) + '. ' + 'O-O'
                 self.pos[0][7] = ' '
                 self.pos[0][5] = 'r'
             elif x_new == 2 and y_new == 0 and piece == 'k':
-                self.pgn += str(self.fullmove) + '. ' + 'O-O-O'
                 self.pos[0][0] = ' '
                 self.pos[0][3] = 'r'
         elif x == 4 and y == 7:
             self.castling[WHITE_KING_SIDE_CASTLE] = False
             self.castling[WHITE_QUEEN_SIDE_CASTLE] = False
             if x_new == 6 and y_new == 7 and piece == 'K':
-                self.pgn += str(self.fullmove) + '. ' + 'O-O'
                 self.pos[7][7] = ' '
                 self.pos[7][5] = 'R'
             elif x_new == 2 and y_new == 7 and piece == 'K':
-                self.pgn += str(self.fullmove) + '. ' + 'O-O-O'
                 self.pos[7][0] = ' '
                 self.pos[7][3] = 'R'
 
         # Remove piece captured en passant
         if en_passant:
             if self.turn:
-                self.piece_count[self.pos[y_new + 1][x_new]] -= 1
+                self.piece_count['p'] -= 1
                 self.pos[y_new + 1][x_new] = ' '
             else:
-                self.piece_count[self.pos[y_new - 1][x_new]] -= 1
+                self.piece_count['P'] -= 1
                 self.pos[y_new - 1][x_new] = ' '
 
         # En passant update

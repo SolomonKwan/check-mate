@@ -23,6 +23,7 @@ from timeit import default_timer as timer
 import board
 import error
 import fen
+import pgn
 
 
 def run_game():
@@ -82,6 +83,8 @@ def run_game():
                 ep = False
         else:
             ep = False
+
+        pgn.update_pgn(game, (x1, y1), (x2, y2))
         game.make_move((x1, y1), (x2, y2), ep)
         game.display((x1, y1), (x2, y2))
 
