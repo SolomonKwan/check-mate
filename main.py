@@ -86,6 +86,8 @@ def run_game():
 
         pgn.update_pgn(game, (x1, y1), (x2, y2))
         game.make_move((x1, y1), (x2, y2), ep)
+        pgn.add_check(game)
+        print(game.pgn)
         game.display((x1, y1), (x2, y2))
 
 
