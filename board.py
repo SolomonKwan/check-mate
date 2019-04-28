@@ -55,9 +55,7 @@ pieces = {
 class Position:
     def __init__(self, position, white, black):
         """
-        Initialise the position. The variable self._last_pos and self._last_fen
-        is the previous position and FEN string of the board respectively and
-        is set initially to None.
+        Initialise the position.
         :param position: The FEN string representing the starting position.
         :param white: A character representing if white is a human or computer.
         :param black: A character representing if black is a human or computer.
@@ -841,7 +839,7 @@ class Position:
                                     (x % 2 == 1 and y % 2 == 0)):
                 self.piece_count['db'] += 1
 
-            self.pgn += '=' + choice.upper()
+            self.pgn = ''.join((self.pgn, '=', choice.upper()))
 
     def check_pawn_moves(self, moves, start, y_new, y1, y2, y3, y4):
         """
@@ -902,7 +900,6 @@ class Position:
 
         status = 0
 
-        # Check for draw
         # Three fold repetition
         for key, value in moves:
             if value >= 3:

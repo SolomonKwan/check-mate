@@ -28,7 +28,7 @@ def update_pgn(game, start, end):
 
     # Add move count
     if game.turn:
-        game.pgn += str(game.fullmove) + '. '
+        game.pgn = ''.join((game.pgn, str(game.fullmove), '. '))
 
     # The piece to move and the piece to move to
     piece = game.pos[y][x]
@@ -38,36 +38,33 @@ def update_pgn(game, start, end):
     castling = False
     if (piece == 'k' and start == (4, 0) and end == (6, 0)) or \
             (piece == 'K' and start == (4, 7) and end == (6, 7)):
-        game.pgn += 'O-O'
+        game.pgn = ''.join((game.pgn, 'O-O'))
         castling = True
     elif (piece == 'k' and start == (4, 0) and end == (2, 0)) or \
             (piece == 'K' and start == (4, 7) and end == (2, 7)):
-        game.pgn += 'O-O-O'
+        game.pgn = ''.join((game.pgn, 'O-O-O'))
         castling = True
 
     # Add king moves and captures
     if (piece == 'K' or piece == 'k') and not castling:
         if end_piece == ' ':
-            game.pgn += 'K' + board.inv_files[x_new] + \
-                        board.inv_ranks[y_new]
+            game.pgn = ''.join((game.pgn, 'K', board.inv_files[x_new],
+                                board.inv_ranks[y_new]))
         else:
-            game.pgn += 'Kx' + board.inv_files[x_new] + \
-                        board.inv_ranks[y_new]
+            game.pgn = ''.join((game.pgn, 'Kx', board.inv_files[x_new],
+                                board.inv_ranks[y_new]))
 
     # Add pawn advances
     if (piece == 'P' or piece == 'p') and x == x_new:
-        print('HERE1')
-        game.pgn += board.inv_files[x] + board.inv_ranks[y_new]
+        game.pgn = ''.join((game.pgn, board.inv_files[x],
+                            board.inv_ranks[y_new]))
     elif piece == 'P' or piece == 'p':
-        print('HERE2')
-        game.pgn += board.inv_files[x] + 'x' + board.inv_files[x_new] + \
-                    board.inv_ranks[y_new]
+        game.pgn = ''.join((game.pgn, board.inv_files[x], 'x',
+                            board.inv_files[x_new], board.inv_ranks[y_new]))
 
     # Add moves of other pieces and other pawn moves
     if piece != 'K' and piece != 'k' and piece != 'P' and piece != 'p':
         add_move(game, piece, end_piece, start, end)
-
-    # Add promotion moves
 
 
 def add_move(game, piece, end_piece, start, end):
@@ -82,18 +79,18 @@ def add_move(game, piece, end_piece, start, end):
     # More than one of this piece and moving to empty square
     ambiguity = check_for_ambiguity(game, piece, start, end)
     if ambiguity == NO_AMBIGUITY:
-        game.pgn += piece.upper() + char + board.inv_files[x_new] + \
-                    board.inv_ranks[y_new]
+        game.pgn = ''.join((game.pgn, piece.upper(), char,
+                            board.inv_files[x_new], board.inv_ranks[y_new]))
     elif ambiguity == USE_FILE:
-        game.pgn += piece.upper() + board.inv_files[x] + char + \
-                    board.inv_files[x_new] + board.inv_ranks[y_new]
+        game.pgn = ''.join((game.pgn, piece.upper(), board.inv_files[x], char,
+                            board.inv_files[x_new], board.inv_ranks[y_new]))
     elif ambiguity == USE_RANK:
-        game.pgn += piece.upper() + board.inv_ranks[y] + char + \
-                    board.inv_files[x_new] + board.inv_ranks[y_new]
+        game.pgn = ''.join((piece.upper(), board.inv_ranks[y], char,
+                            board.inv_files[x_new], board.inv_ranks[y_new]))
     else:
-        game.pgn += piece.upper() + board.inv_files[x] + char + \
-                    board.inv_ranks[y] + board.inv_files[x_new] + \
-                    board.inv_ranks[y_new]
+        game.pgn = ''.join((piece.upper(), board.inv_files[x], char,
+                            board.inv_ranks[y], board.inv_files[x_new],
+                            board.inv_ranks[y_new]))
 
 
 def check_for_ambiguity(game, piece, start, end):
@@ -209,17 +206,17 @@ def get_diagonal_attacks(pieces, end, piece, game):
 
 def add_check(game):
     if game.is_attacked(game.get_king_coordinates()):
-        game.pgn += '+'
+        game.pgn = ''.join((game.pgn, '+'))
     game.pgn += ' '
 
 
 def add_results(game, status):
     if status == error.WHITE_WINS:
         game.pgn = game.pgn[:-2]
-        game.pgn += '# 1-0'
+        game.pgn = ''.join((game.pgn, '# 1-0'))
     elif status == error.BLACK_WINS:
         game.pgn = game.pgn[:-2]
-        game.pgn += '# 0-1'
+        game.pgn = ''.join((game.pgn, '# 0-1'))
     else:
         game.pgn = game.pgn[:-1]
-        game.pgn += ' 1/2-1/2'
+        game.pgn = ''.join((game.pgn, ' 1/2-1/2'))

@@ -359,61 +359,61 @@ def get_fen(pos, turn, castling, en_passant, halfmove, fullmove):
         for item in rank:
             if item != ' ':
                 if space_count != 0:
-                    fen += str(space_count)
+                    fen = ''.join((fen, str(space_count)))
                     space_count = 0
-                fen += item
+                fen = ''.join((fen, item))
             else:
                 space_count += 1
         i += 1
         if space_count != 0:
-            fen += str(space_count)
+            fen = ''.join((fen, str(space_count)))
         if i != 8:
-            fen += '/'
-    fen += ' '
+            fen = ''.join((fen, '/'))
+    fen = ''.join((fen, ' '))
 
     # Add whose turn
     if turn:
-        fen += 'w'
+        fen = ''.join((fen, 'w'))
     else:
-        fen += 'b'
-    fen += ' '
+        fen = ''.join((fen, 'b'))
+    fen = ''.join((fen, ' '))
 
     # Add the castling
     i = 0
     for value in castling:
         if i == 0 and value:
-            fen += 'K'
+            fen = ''.join((fen, 'K'))
         if i == 1 and value:
-            fen += 'Q'
+            fen = ''.join((fen, 'Q'))
         if i == 2 and value:
-            fen += 'k'
+            fen = ''.join((fen, 'k'))
         if i == 3 and value:
-            fen += 'q'
+            fen = ''.join((fen, 'q'))
         i += 1
     count = 0
     for item in castling:
         if not item:
             count += 1
     if count == 4:
-        fen += '-'
-    fen += ' '
+        fen = ''.join((fen, '-'))
+    fen = ''.join((fen, ' '))
 
     # Add en passant square
     if en_passant is not None:
         x, y = en_passant
         for key, value in board.files.items():
             if value == x:
-                fen += key
+                fen = ''.join((fen, key))
         for key, value in board.ranks.items():
             if value == y:
-                fen += key
+                fen = ''.join((fen, key))
     else:
-        fen += '-'
-    fen += ' '
+        fen = ''.join((fen, '-'))
+    fen = ''.join((fen, ' '))
 
     # Half and full moves
-    fen += str(halfmove)
-    fen += ' '
-    fen += str(fullmove)
+    fen = ''.join((fen, str(halfmove)))
+    fen = ''.join((fen, ' '))
+    fen = ''.join((fen, str(fullmove)))
 
     return fen
