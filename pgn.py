@@ -1,5 +1,6 @@
 
 import board
+import error
 
 NO_AMBIGUITY = 0
 USE_FILE = 1
@@ -44,7 +45,7 @@ def update_pgn(game, start, end):
         game.pgn += 'O-O-O'
         castling = True
 
-    # Add moves and captures
+    # Add king moves and captures
     if (piece == 'K' or piece == 'k') and not castling:
         if end_piece == ' ':
             game.pgn += 'K' + board.inv_files[x_new] + \
@@ -53,87 +54,52 @@ def update_pgn(game, start, end):
             game.pgn += 'Kx' + board.inv_files[x_new] + \
                         board.inv_ranks[y_new]
 
-    # Add moves of other pieces
-    if piece != 'K' and piece != 'k':
+    # Add pawn advances
+    if (piece == 'P' or piece == 'p') and x == x_new:
+        print('HERE1')
+        game.pgn += board.inv_files[x] + board.inv_ranks[y_new]
+    elif piece == 'P' or piece == 'p':
+        print('HERE2')
+        game.pgn += board.inv_files[x] + 'x' + board.inv_files[x_new] + \
+                    board.inv_ranks[y_new]
+
+    # Add moves of other pieces and other pawn moves
+    if piece != 'K' and piece != 'k' and piece != 'P' and piece != 'p':
         add_move(game, piece, end_piece, start, end)
 
     # Add promotion moves
-
-    # if piece == 'k' and not (x == 4 and y == 0) and \
-    #         (not (x_new == 6 and y_new == 0) or
-    #          not (x_new == 2 and y_new == 0)):
-    #     if end_piece == ' ':
-    #         self.pgn += 'K' + inv_files[x_new] + inv_ranks[y_new] + ' '
-    #     else:
-    #         self.pgn += 'Kx' + inv_files[x_new] + inv_ranks[y_new] + ' '
-    # elif piece == 'K' and not (x == 4 and y == 7) and \
-    #         (not (x_new == 6 and y_new == 7) or
-    #          not (x_new == 2 and y_new == 7)):
-    #     if end_piece == ' ':
-    #         self.pgn += 'K' + inv_files[x_new] + inv_ranks[y_new] + ' '
-    #     else:
-    #         self.pgn += 'Kx' + inv_files[x_new] + inv_ranks[y_new] + ' '
-    # elif piece == 'P' or piece == 'p':
-    #     if en_passant:
-    #         self.pgn += inv_files[x_new] + 'x' + inv_ranks[y_new] + ' '
-    #     elif end_piece == ' ':
-    #         self.pgn += inv_files[x_new] + str(8 - y_new) + ' '
-    #     else:
-    #         pass
 
 
 def add_move(game, piece, end_piece, start, end):
     x, y = start
     x_new, y_new = end
 
-    if piece != 'B' and piece != 'b' and piece != 'P' and piece != 'p':
-        if game.piece_count[piece] == 1 and end_piece == ' ':
-            # Only one of this piece and moving to empty square
-            game.pgn += piece.upper() + board.inv_files[x_new] + \
-                        board.inv_ranks[y_new]
-        elif game.piece_count[piece] == 1:
-            # Only one of this piece and capturing
-            game.pgn += piece.upper() + 'x' + board.inv_files[x_new] + \
-                        board.inv_ranks[y_new]
-        elif end_piece == ' ':
-            # More than one of this piece and moving to empty square
-            ambiguity = check_for_ambiguity(game, piece, start, end)
-            if ambiguity == NO_AMBIGUITY:
-                game.pgn += piece.upper() + board.inv_files[x_new] + \
-                            board.inv_ranks[y_new]
-            elif ambiguity == USE_FILE:
-                game.pgn += piece.upper() + board.inv_files[x] + \
-                            board.inv_files[x_new] + board.inv_ranks[y_new]
-            elif ambiguity == USE_RANK:
-                game.pgn += piece.upper() + board.inv_ranks[y] + \
-                            board.inv_files[x_new] + board.inv_ranks[y_new]
-            else:
-                game.pgn += piece.upper() + board.inv_files[x] + \
-                            board.inv_ranks[y] + board.inv_files[x_new] + \
-                            board.inv_ranks[y_new]
-        else:
-            # More than one of this piece and capturing
-            ambiguity = check_for_ambiguity(game, piece, start, end)
-            if NO_AMBIGUITY:
-                game.pgn += piece.upper() + 'x' + board.inv_files[x_new] + \
-                            board.inv_ranks[y_new]
-            elif ambiguity == USE_FILE:
-                game.pgn += piece.upper() + board.inv_files[x] + 'x' + \
-                            board.inv_files[x_new] + board.inv_ranks[y_new]
-            elif ambiguity == USE_RANK:
-                game.pgn += piece.upper() + board.inv_ranks[y] + 'x' + \
-                            board.inv_files[x_new] + board.inv_ranks[y_new]
-            else:
-                game.pgn += piece.upper() + board.inv_files[x] + \
-                            board.inv_ranks[y] + 'x' + \
-                            board.inv_files[x_new] + board.inv_ranks[y_new]
+    if end_piece == ' ':
+        char = ''
     else:
-        pass
+        char = 'x'
+
+    # More than one of this piece and moving to empty square
+    ambiguity = check_for_ambiguity(game, piece, start, end)
+    if ambiguity == NO_AMBIGUITY:
+        game.pgn += piece.upper() + char + board.inv_files[x_new] + \
+                    board.inv_ranks[y_new]
+    elif ambiguity == USE_FILE:
+        game.pgn += piece.upper() + board.inv_files[x] + char + \
+                    board.inv_files[x_new] + board.inv_ranks[y_new]
+    elif ambiguity == USE_RANK:
+        game.pgn += piece.upper() + board.inv_ranks[y] + char + \
+                    board.inv_files[x_new] + board.inv_ranks[y_new]
+    else:
+        game.pgn += piece.upper() + board.inv_files[x] + char + \
+                    board.inv_ranks[y] + board.inv_files[x_new] + \
+                    board.inv_ranks[y_new]
 
 
 def check_for_ambiguity(game, piece, start, end):
     x_old, y_old = start
     x_new, y_new = end
+
     # Queen
     if piece == 'Q' or piece == 'q':
         # Find the queens
@@ -142,22 +108,15 @@ def check_for_ambiguity(game, piece, start, end):
         get_horizontal_attacks(queens, end, piece, game)
         get_diagonal_attacks(queens, end, piece, game)
 
-        # Check for possible ambiguity. If none, return.
-        if len(queens) == 1:
-            return NO_AMBIGUITY
-        queens.remove((x_old, y_old))
-
-        # Check ambiguity solution type
-        files = [x for x, y in queens]
-        ranks = [y for x, y in queens]
-        if x_old not in files:
-            return USE_FILE
-        elif y_old not in ranks:
-            return USE_RANK
-        else:
-            return USE_FILE_AND_RANK
+        return find_sol_type(queens, x_old, y_old)
 
     # Bishop
+    if piece == 'B' or piece == 'b':
+        # Find the bishops
+        bishops = []
+        get_diagonal_attacks(bishops, end, piece, game)
+
+        return find_sol_type(bishops, x_old, y_old)
 
     # Knight
     if piece == 'N' or piece == 'n':
@@ -168,34 +127,34 @@ def check_for_ambiguity(game, piece, start, end):
                 if 0 <= y_new + j <= 7 and 0 <= x_new + i <= 7:
                     if game.pos[y_new + j][x_new + i] == piece:
                         knights.append((x_new + i, y_new + j))
-
-        # Check for possible ambiguity. If none, return.
-        if len(knights) == 1:
-            return NO_AMBIGUITY
-        knights.remove((x_old, y_old))
-
-        # Check ambiguity solution type
-        files = [x for x, y in knights]
-        ranks = [y for x, y in knights]
-        if x_old not in files:
-            return USE_FILE
-        elif y_old not in ranks:
-            return USE_RANK
-        else:
-            return USE_FILE_AND_RANK
-
+        return find_sol_type(knights, x_old, y_old)
 
     # Rook
-    if piece == 'R':
-        pass
-    elif piece == 'r':
-        pass
+    if piece == 'R' or piece == 'r':
+        # Find the rooks
+        rooks = []
+        get_vertical_attacks(rooks, end, piece, game)
+        get_horizontal_attacks(rooks, end, piece, game)
 
-    # Pawn
-    if piece == 'P':
-        pass
-    elif piece == 'p':
-        pass
+        return find_sol_type(rooks, x_old, y_old)
+
+
+def find_sol_type(pieces, x_old, y_old):
+    # Check for possible ambiguity. If none, return.
+    if len(pieces) == 1:
+        print('pieces: ', pieces)
+        return NO_AMBIGUITY
+    pieces.remove((x_old, y_old))
+
+    # Check ambiguity solution type
+    files = [x for x, y in pieces]
+    ranks = [y for x, y in pieces]
+    if x_old not in files:
+        return USE_FILE
+    elif y_old not in ranks:
+        return USE_RANK
+    else:
+        return USE_FILE_AND_RANK
 
 
 def get_vertical_attacks(pieces, end, piece, game):
@@ -254,5 +213,13 @@ def add_check(game):
     game.pgn += ' '
 
 
-def add_results(pgn):
-    pass
+def add_results(game, status):
+    if status == error.WHITE_WINS:
+        game.pgn = game.pgn[:-2]
+        game.pgn += '# 1-0'
+    elif status == error.BLACK_WINS:
+        game.pgn = game.pgn[:-2]
+        game.pgn += '# 0-1'
+    else:
+        game.pgn = game.pgn[:-1]
+        game.pgn += ' 1/2-1/2'
