@@ -841,6 +841,8 @@ class Position:
                                     (x % 2 == 1 and y % 2 == 0)):
                 self.piece_count['db'] += 1
 
+            self.pgn += '=' + choice.upper()
+
     def check_pawn_moves(self, moves, start, y_new, y1, y2, y3, y4):
         """
         Determines the moves that the pawns can make and adds them to the moves
