@@ -1,7 +1,7 @@
 
 import copy
 import random
-
+from timeit import default_timer as timer
 import error
 import fen
 import pgn
@@ -135,28 +135,20 @@ class Position:
         :return: Nothing.
         """
 
-        # Unpack the start and end tuples of the last move
-        x1, y1 = start
-        x2, y2 = end
         print(self.pgn)
         # Print the board position
         print('  0 1 2 3 4 5 6 7')
         i = 0
         for rank in self.pos:
             print(8 - i, end=' ')
-            for item in rank:
-                if item == ' ':
-                    print('.', end=' ')
-                else:
-                    print(item, end=' ')
+            print(*['.' if item == ' ' else item for item in rank], end=' ')
             print(i, end=' ')
             print()
             i += 1
         print('  a b c d e f g h', end='\n')
 
         # Print the information regarding the current board position
-        print('Last move: ', str(x1) + ' ', str(y1) + ' ', str(x2) + ' ',
-              str(y2))
+        print('Last move: ', start, end)
         print('Turn: ', self.turn)
         print('Num of legal moves: ', len(self.get_legal_moves()))
         print('En passant: ', self.en_passant)
@@ -179,15 +171,13 @@ class Position:
             king = 'K'
         x, y = coordinates
 
-        # Check if a king is adjacent to the given square
+        # Check if the kings are adjacent
         for i in [-1, 0, 1]:
             for j in [-1, 0, 1]:
-                if i != 0 or j != 0:
-                    x_new = x + i
-                    y_new = y + j
-                    if 0 <= x_new <= 7 and 0 <= y_new <= 7:
-                        if self.pos[y_new][x_new] == king:
-                            return False
+                if (i != 0 or j != 0) and (0 <= x + i <= 7 and
+                                           0 <= y + j <= 7) and \
+                        (self.pos[y + j][x + i] == king):
+                    return False
         return True
 
     def make_move(self, start, end, en_passant):
@@ -222,8 +212,7 @@ class Position:
             elif end_piece == 'b' and ((x_new % 2 == 0 and y_new % 2 == 0) or
                                        (x_new % 2 == 1 and y_new % 2 == 1)):
                 self.piece_count['lb'] -= 1
-            elif end_piece == 'b' and ((x_new % 2 == 0 and y_new % 2 == 1) or
-                                       (x_new % 2 == 1 and y_new % 2 == 0)):
+            else:
                 self.piece_count['db'] -= 1
         self.pos[y_new][x_new] = piece
 
@@ -333,30 +322,48 @@ class Position:
             queen = 'Q'
             rook = 'R'
 
-        for i in [-1, 1]:
-            # Search for vertical check
-            for j in list(range(1, 8)):
-                y_new = y + i * j
-                if 0 <= y_new <= 7:
-                    char = self.pos[y_new][x]
-                    if char != ' ' and char != rook and char != queen:
-                        break
-                    elif char == rook or char == queen:
-                        return True
-                else:
-                    continue
+        multipliers = [
+            (-1, 1), (-2, 2), (-3, 3), (-4, 4), (-5, 5), (-6, 6), (-7, 7)
+        ]
 
-            # Search for horizontal check
-            for j in list(range(1, 8)):
-                x_new = x + i * j
-                if 0 <= x_new <= 7:
-                    char = self.pos[y][x_new]
-                    if char != ' ' and char != rook and char != queen:
-                        break
-                    elif char == rook or char == queen:
-                        return True
-                else:
-                    continue
+        blocked_hn = False
+        blocked_hp = False
+        blocked_vn = False
+        blocked_vp = False
+        for multiplier in multipliers:
+            neg_shift, pos_shift = multiplier
+            x_new_n = x + neg_shift
+            y_new_n = y + neg_shift
+            x_new_p = x + pos_shift
+            y_new_p = y + pos_shift
+
+            if 0 <= x_new_n <= 7 and not blocked_hn:
+                char = self.pos[y][x_new_n]
+                if char == rook or char == queen:
+                    return True
+                elif char != ' ' and char != rook and char != queen:
+                    blocked_hn = True
+
+            if 0 <= x_new_p <= 7 and not blocked_hp:
+                char = self.pos[y][x_new_p]
+                if char == rook or char == queen:
+                    return True
+                elif char != ' ' and char != rook and char != queen:
+                    blocked_hp = True
+
+            if 0 <= y_new_n <= 7 and not blocked_vn:
+                char = self.pos[y_new_n][x]
+                if char == rook or char == queen:
+                    return True
+                elif char != ' ' and char != rook and char != queen:
+                    blocked_vn = True
+
+            if 0 <= y_new_p <= 7 and not blocked_vp:
+                char = self.pos[y_new_p][x]
+                if char == rook or char == queen:
+                    return True
+                elif char != ' ' and char != rook and char != queen:
+                    blocked_vp = True
         return False
 
     def diagonal_attack(self, coordinates):
