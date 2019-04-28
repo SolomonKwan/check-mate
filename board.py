@@ -121,10 +121,9 @@ class Position:
         x = -1
         y = -1
         for rank in self.pos:
-            for item in rank:
-                if item == king:
-                    x = rank.index(item)
-                    y = self.pos.index(rank)
+            if king in rank:
+                x = rank.index(king)
+                y = self.pos.index(rank)
 
         return x, y
 
@@ -139,7 +138,7 @@ class Position:
         # Unpack the start and end tuples of the last move
         x1, y1 = start
         x2, y2 = end
-
+        print(self.pgn)
         # Print the board position
         print('  0 1 2 3 4 5 6 7')
         i = 0

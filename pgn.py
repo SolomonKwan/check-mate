@@ -85,10 +85,10 @@ def add_move(game, piece, end_piece, start, end):
         game.pgn = ''.join((game.pgn, piece.upper(), board.inv_files[x], char,
                             board.inv_files[x_new], board.inv_ranks[y_new]))
     elif ambiguity == USE_RANK:
-        game.pgn = ''.join((piece.upper(), board.inv_ranks[y], char,
+        game.pgn = ''.join((game.pgn, piece.upper(), board.inv_ranks[y], char,
                             board.inv_files[x_new], board.inv_ranks[y_new]))
     else:
-        game.pgn = ''.join((piece.upper(), board.inv_files[x], char,
+        game.pgn = ''.join((game.pgn, piece.upper(), board.inv_files[x], char,
                             board.inv_ranks[y], board.inv_files[x_new],
                             board.inv_ranks[y_new]))
 
@@ -132,14 +132,12 @@ def check_for_ambiguity(game, piece, start, end):
         rooks = []
         get_vertical_attacks(rooks, end, piece, game)
         get_horizontal_attacks(rooks, end, piece, game)
-
         return find_sol_type(rooks, x_old, y_old)
 
 
 def find_sol_type(pieces, x_old, y_old):
     # Check for possible ambiguity. If none, return.
     if len(pieces) == 1:
-        print('pieces: ', pieces)
         return NO_AMBIGUITY
     pieces.remove((x_old, y_old))
 
@@ -164,6 +162,7 @@ def get_vertical_attacks(pieces, end, piece, game):
                 char = game.pos[y_new][x]
                 if char == piece:
                     pieces.append((x, y_new))
+                    break
                 elif char == ' ':
                     continue
                 elif char != piece and char != ' ':
@@ -180,6 +179,7 @@ def get_horizontal_attacks(pieces, end, piece, game):
                 char = game.pos[y][x_new]
                 if char == piece:
                     pieces.append((x_new, y))
+                    break
                 elif char == ' ':
                     continue
                 elif char != piece and char != ' ':
@@ -198,6 +198,7 @@ def get_diagonal_attacks(pieces, end, piece, game):
                     char = game.pos[y_new][x_new]
                     if char == piece:
                         pieces.append((x_new, y_new))
+                        break
                     elif char == ' ':
                         continue
                     elif char != piece and char != ' ':
