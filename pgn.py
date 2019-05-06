@@ -9,16 +9,13 @@ USE_FILE_AND_RANK = 3
 
 
 def set_up_pgn():
-    pgn = "[Event \"The Rapture\"]\n" \
-          "[Site \"Brisbane, QLD AUS\"]\n" \
-          "[Date \"??\"]\n" \
-          "[Round \"\"]\n" \
-          "[White \"\"]\n" \
-          "[Black \"\"]\n" \
-          "[Result \"*\"]\n" \
-          "\n"
-
-    return pgn
+    return "[Event \"The Rapture\"]\n" \
+           "[Site \"Brisbane, QLD AUS\"]\n" \
+           "[Date \"??\"]\n" \
+           "[Round \"\"]\n" \
+           "[White \"\"]\n" \
+           "[Black \"\"]\n" \
+           "[Result \"*\"]\n\n"
 
 
 def update_pgn(game, start, end):
