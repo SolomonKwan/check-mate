@@ -12,7 +12,7 @@ Created November 2018.
     Add AI
     Add PGN
     Add GUI
-    Fix the unresolved reference error of the pgn.py import
+    Check if faster to pass class to function or attributes individually
 """
 
 import copy
