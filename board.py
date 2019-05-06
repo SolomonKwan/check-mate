@@ -1,7 +1,9 @@
 
 import copy
+from itertools import product
 import random
 from timeit import default_timer as timer
+
 import error
 import fen
 import pgn
@@ -112,14 +114,10 @@ class Position:
         """
 
         # Determine the king character
-        if self.turn:
-            king = 'K'
-        else:
-            king = 'k'
+        king = 'K' if self.turn else 'k'
 
         # Find the kings coordinates
-        x = -1
-        y = -1
+        x, y = None, None
         for rank in self.pos:
             if king in rank:
                 x = rank.index(king)
@@ -134,28 +132,27 @@ class Position:
         en passant and castling privileges and the current FEN string.
         :return: Nothing.
         """
-
-        print(self.pgn)
-        # Print the board position
-        print('  0 1 2 3 4 5 6 7')
-        i = 0
-        for rank in self.pos:
-            print(8 - i, end=' ')
-            print(*['.' if item == ' ' else item for item in rank], end=' ')
-            print(i, end=' ')
-            print()
-            i += 1
+        print('  0 1 2 3 4 5 6 7', end='\n')
+        print(''.join([str(8 - i) + ' ' + item + ' ' if j % 8 == 0 and
+                      item != ' ' else
+                str(8 - i) + ' . ' if j % 8 == 0 and item == ' ' else
+                item + ' ' + str(i) + '\n' if j % 8 == 7 and item != ' ' else
+                '. ' + str(i) + '\n' if j % 8 == 7 and item == ' ' else
+                item + ' ' if item != ' ' else '. '
+                for i, rank in enumerate(self.pos) for j, item in
+                enumerate(rank)]).rstrip('\n'))
         print('  a b c d e f g h', end='\n')
 
         # Print the information regarding the current board position
-        print('Last move: ', start, end)
-        print('Turn: ', self.turn)
-        print('Num of legal moves: ', len(self.get_legal_moves()))
-        print('En passant: ', self.en_passant)
-        print('Castling: ', self.castling)
-        print("Halfmove: ", self.halfmove)
-        print("Fullmove: ", self.fullmove)
-        print(self.current_fen, end='\n\n')
+        print(''.
+              join(('Last move: ', str(start), ' ', str(end),
+                    '\nTurn: ', str(self.turn),
+                    '\nNum of legal moves: ', str(len(self.get_legal_moves())),
+                    '\nEn passant: ', str(self.en_passant),
+                    '\nCastling: ', str(self.castling),
+                    '\nHalfmove: ', str(self.halfmove),
+                    '\nFullmove: ', str(self.fullmove),
+                    '\n', str(self.current_fen), '\n')))
 
     def kings_apart(self, coordinates):
         """
@@ -171,6 +168,17 @@ class Position:
             king = 'K'
         x, y = coordinates
 
+        # start = timer()
+        # # Check if the kings are adjacent
+        # for i, j in list(product([-1, 0, 1], repeat=2)):
+        #     if (i != 0 or j != 0) and (0 <= x + i <= 7 and 0 <= y + j <= 7) \
+        #             and (self.pos[y + j][x + i] == king):
+        #         return False
+        # # return True
+        # end = timer()
+        # print(end - start)
+
+        # start = timer()
         # Check if the kings are adjacent
         for i in [-1, 0, 1]:
             for j in [-1, 0, 1]:
@@ -179,6 +187,9 @@ class Position:
                         (self.pos[y + j][x + i] == king):
                     return False
         return True
+        # end = timer()
+        # print(end - start)
+        # exit(-1)
 
     def make_move(self, start, end, en_passant):
         """
@@ -296,6 +307,7 @@ class Position:
 
         if self.diagonal_attack(coordinates):
             return True
+
         if self.knight_attack(coordinates):
             return True
 
