@@ -122,6 +122,7 @@ class Position:
             if king in rank:
                 x = rank.index(king)
                 y = self.pos.index(rank)
+                break
 
         return x, y
 
@@ -134,13 +135,13 @@ class Position:
         """
         print('  0 1 2 3 4 5 6 7', end='\n')
         print(''.join([str(8 - i) + ' ' + item + ' ' if j % 8 == 0 and
-                      item != ' ' else
-                str(8 - i) + ' . ' if j % 8 == 0 and item == ' ' else
-                item + ' ' + str(i) + '\n' if j % 8 == 7 and item != ' ' else
-                '. ' + str(i) + '\n' if j % 8 == 7 and item == ' ' else
-                item + ' ' if item != ' ' else '. '
-                for i, rank in enumerate(self.pos) for j, item in
-                enumerate(rank)]).rstrip('\n'))
+                      item != ' ' else str(8 - i) + ' . ' if j % 8 == 0 and
+                      item == ' ' else item + ' ' + str(i) + '\n' if
+                      j % 8 == 7 and item != ' ' else '. ' + str(i) + '\n' if
+                      j % 8 == 7 and item == ' ' else item + ' ' if
+                      item != ' ' else '. ' for i, rank in
+                      enumerate(self.pos) for j, item in enumerate(rank)]).
+              rstrip('\n'))
         print('  a b c d e f g h', end='\n')
 
         # Print the information regarding the current board position
@@ -156,29 +157,15 @@ class Position:
 
     def kings_apart(self, coordinates):
         """
-        Check if the kings are adjacent. Assumes that both kings are present on
+        Check if the kings are apart. Assumes that both kings are present on
         the board.
         :param coordinates: The current coordinate of the king of the player
         whose turn it is.
         :return: True if the kings are apart, false otherwise.
         """
-        if self.turn:
-            king = 'k'
-        else:
-            king = 'K'
+        king = 'k' if self.turn else 'K'
         x, y = coordinates
 
-        # start = timer()
-        # # Check if the kings are adjacent
-        # for i, j in list(product([-1, 0, 1], repeat=2)):
-        #     if (i != 0 or j != 0) and (0 <= x + i <= 7 and 0 <= y + j <= 7) \
-        #             and (self.pos[y + j][x + i] == king):
-        #         return False
-        # # return True
-        # end = timer()
-        # print(end - start)
-
-        # start = timer()
         # Check if the kings are adjacent
         for i in [-1, 0, 1]:
             for j in [-1, 0, 1]:
@@ -187,9 +174,6 @@ class Position:
                         (self.pos[y + j][x + i] == king):
                     return False
         return True
-        # end = timer()
-        # print(end - start)
-        # exit(-1)
 
     def make_move(self, start, end, en_passant):
         """
@@ -334,48 +318,26 @@ class Position:
             queen = 'Q'
             rook = 'R'
 
-        multipliers = [
-            (-1, 1), (-2, 2), (-3, 3), (-4, 4), (-5, 5), (-6, 6), (-7, 7)
-        ]
+        for i in [-1, 1]:
+            for j in range(1, 8):
+                if 0 <= x + i * j <= 7:
+                    char = self.pos[y][x + i * j]
+                    if char == rook or char == queen:
+                        return True
+                    elif char != ' ':
+                        break
+                else:
+                    break
 
-        blocked_hn = False
-        blocked_hp = False
-        blocked_vn = False
-        blocked_vp = False
-        for multiplier in multipliers:
-            neg_shift, pos_shift = multiplier
-            x_new_n = x + neg_shift
-            y_new_n = y + neg_shift
-            x_new_p = x + pos_shift
-            y_new_p = y + pos_shift
-
-            if 0 <= x_new_n <= 7 and not blocked_hn:
-                char = self.pos[y][x_new_n]
-                if char == rook or char == queen:
-                    return True
-                elif char != ' ' and char != rook and char != queen:
-                    blocked_hn = True
-
-            if 0 <= x_new_p <= 7 and not blocked_hp:
-                char = self.pos[y][x_new_p]
-                if char == rook or char == queen:
-                    return True
-                elif char != ' ' and char != rook and char != queen:
-                    blocked_hp = True
-
-            if 0 <= y_new_n <= 7 and not blocked_vn:
-                char = self.pos[y_new_n][x]
-                if char == rook or char == queen:
-                    return True
-                elif char != ' ' and char != rook and char != queen:
-                    blocked_vn = True
-
-            if 0 <= y_new_p <= 7 and not blocked_vp:
-                char = self.pos[y_new_p][x]
-                if char == rook or char == queen:
-                    return True
-                elif char != ' ' and char != rook and char != queen:
-                    blocked_vp = True
+            for j in range(1, 8):
+                if 0 <= y + i * j <= 7:
+                    char = self.pos[y + i * j][x]
+                    if char == rook or char == queen:
+                        return True
+                    elif char != ' ':
+                        break
+                else:
+                    break
         return False
 
     def diagonal_attack(self, coordinates):
@@ -839,7 +801,7 @@ class Position:
                 while choice not in choices:
                     choice = input('Invalid choice. Choose again: ')
 
-            # Make the pawn promotion
+            # Make the pawn promotion and update piece count
             self.piece_count[pawn] -= 1
             self.pos[y][x] = choice
             if choice != 'B' and choice != 'b':
@@ -928,16 +890,16 @@ class Position:
             status = error.FIFTY_MOVE_RULE
 
         # Insufficient material
-        if self.insufficient_material():
+        elif self.insufficient_material():
             status = error.INSUFFICIENT_MATERIAL
 
         # Check for stalemate
-        if not self.is_attacked(self.get_king_coordinates()) and \
+        elif not self.is_attacked(self.get_king_coordinates()) and \
                 len(self.get_legal_moves()) == 0:
             status = error.STALEMATE
 
         # Check for checkmate
-        if self.is_attacked(self.get_king_coordinates()) and \
+        elif self.is_attacked(self.get_king_coordinates()) and \
                 len(self.get_legal_moves()) == 0:
             if self.turn:
                 status = error.BLACK_WINS
