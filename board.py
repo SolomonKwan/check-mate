@@ -1,6 +1,6 @@
 
 import copy
-from itertools import product
+import itertools
 import random
 from timeit import default_timer as timer
 
@@ -321,20 +321,20 @@ class Position:
         for i in [-1, 1]:
             for j in range(1, 8):
                 if 0 <= x + i * j <= 7:
-                    char = self.pos[y][x + i * j]
-                    if char == rook or char == queen:
+                    if self.pos[y][x + i * j] == rook or \
+                            self.pos[y][x + i * j] == queen:
                         return True
-                    elif char != ' ':
+                    elif self.pos[y][x + i * j] != ' ':
                         break
                 else:
                     break
 
             for j in range(1, 8):
                 if 0 <= y + i * j <= 7:
-                    char = self.pos[y + i * j][x]
-                    if char == rook or char == queen:
+                    if self.pos[y + i * j][x] == rook or \
+                            self.pos[y + i * j][x] == queen:
                         return True
-                    elif char != ' ':
+                    elif self.pos[y + i * j][x] != ' ':
                         break
                 else:
                     break
@@ -361,19 +361,17 @@ class Position:
         # Search for a diagonal attack
         for i in [-1, 1]:
             for j in [-1, 1]:
-                for k in list(range(1, 8)):
-                    x_new = x + i * k
-                    y_new = y + j * k
-
-                    if 0 <= x_new <= 7 and 0 <= y_new <= 7:
-                        char = self.pos[y_new][x_new]
-                        if char != ' ' and char != queen and char != bishop:
+                for k in range(1, 8):
+                    if 0 <= x + i * k <= 7 and 0 <= y + j * k <= 7:
+                        if self.pos[y + j * k][x + i * k] != ' ' and \
+                                self.pos[y + j * k][x + i * k] != queen and \
+                                self.pos[y + j * k][x + i * k] != bishop:
                             break
-                        elif char == queen or char == bishop:
+                        elif self.pos[y + j * k][x + i * k] == queen or \
+                                self.pos[y + j * k][x + i * k] == bishop:
                             return True
                     else:
-                        continue
-
+                        break
         return False
 
     def knight_attack(self, coordinates):
@@ -393,15 +391,11 @@ class Position:
             knight = 'N'
 
         # Search for a knight attack
-        for i in [-1, 1, -2, 2]:
-            for j in [-1, 1, -2, 2]:
-                if abs(i) != abs(j):
-                    x_new = x + i
-                    y_new = y + j
-                    if 0 <= x_new <= 7 and 0 <= y_new <= 7:
-                        char = self.pos[y_new][x_new]
-                        if char == knight:
-                            return True
+        for i, j in itertools.permutations([-1, 1, -2, 2], 2):
+            if 0 <= x + i <= 7 and 0 <= y + j <= 7:
+                char = self.pos[y + j][x + i]
+                if char == knight:
+                    return True
 
         return False
 
@@ -472,16 +466,14 @@ class Position:
                         char = self.pos[y_new][x_new]
                         if self.turn:
                             if (char.islower() or char == ' ') and char != 'k':
-                                self.make_check_and_add_move((x, y),
-                                                             (x_new, y_new),
-                                                             NOT_EN_PASSANT,
-                                                             moves)
+                                self.process_move((x, y), (x_new, y_new),
+                                                  NOT_EN_PASSANT,
+                                                  moves)
                         else:
                             if (char.isupper() or char == ' ') and char != 'K':
-                                self.make_check_and_add_move((x, y),
-                                                             (x_new, y_new),
-                                                             NOT_EN_PASSANT,
-                                                             moves)
+                                self.process_move((x, y), (x_new, y_new),
+                                                  NOT_EN_PASSANT,
+                                                  moves)
 
         # Check for castling moves
         if self.turn and x == 4 and y == 7:
@@ -603,14 +595,14 @@ class Position:
                             <= 7:
                         char = self.pos[y_new][x_new]
                         if self.turn and char.islower() or char == ' ':
-                            self.make_check_and_add_move(knight, (x_new,
-                                                                  y_new),
-                                                         NOT_EN_PASSANT, moves)
+                            self.process_move(knight, (x_new,
+                                                       y_new),
+                                              NOT_EN_PASSANT, moves)
 
                         elif not self.turn and char.isupper() or char == ' ':
-                            self.make_check_and_add_move(knight, (x_new,
-                                                                  y_new),
-                                                         NOT_EN_PASSANT, moves)
+                            self.process_move(knight, (x_new,
+                                                       y_new),
+                                              NOT_EN_PASSANT, moves)
 
     def get_pawn_moves(self, moves):
         """
@@ -740,11 +732,11 @@ class Position:
         # White's turn
         if self.turn:
             if char == ' ':
-                self.make_check_and_add_move(start, (x, y), NOT_EN_PASSANT,
-                                             moves)
+                self.process_move(start, (x, y), NOT_EN_PASSANT,
+                                  moves)
             elif char.islower():
-                self.make_check_and_add_move(start, (x, y), NOT_EN_PASSANT,
-                                             moves)
+                self.process_move(start, (x, y), NOT_EN_PASSANT,
+                                  moves)
                 return True
             elif char.isupper():
                 return True
@@ -752,11 +744,11 @@ class Position:
         # Black's turn
         else:
             if char == ' ':
-                self.make_check_and_add_move(start, (x, y), NOT_EN_PASSANT,
-                                             moves)
+                self.process_move(start, (x, y), NOT_EN_PASSANT,
+                                  moves)
             elif char.isupper():
-                self.make_check_and_add_move(start, (x, y), NOT_EN_PASSANT,
-                                             moves)
+                self.process_move(start, (x, y), NOT_EN_PASSANT,
+                                  moves)
                 return True
             elif char.islower():
                 return True
@@ -837,38 +829,38 @@ class Position:
         # One square advance
         x, y = start
         if self.pos[y_new][x] == ' ':
-            self.make_check_and_add_move(start, (x, y_new), NOT_EN_PASSANT,
-                                         moves)
+            self.process_move(start, (x, y_new), NOT_EN_PASSANT,
+                              moves)
 
         # Two square initial move
         if y == y1 and self.pos[y2][x] == ' ' and self.pos[y3][x] == ' ':
-            self.make_check_and_add_move(start, (x, y3), NOT_EN_PASSANT, moves)
+            self.process_move(start, (x, y3), NOT_EN_PASSANT, moves)
 
         # Capture moves
         if self.turn:
             if 0 <= x - 1 <= 7 and self.pos[y_new][x - 1].islower():
-                self.make_check_and_add_move(start, (x - 1, y_new),
-                                             NOT_EN_PASSANT, moves)
+                self.process_move(start, (x - 1, y_new),
+                                  NOT_EN_PASSANT, moves)
             if 0 <= x + 1 <= 7 and self.pos[y_new][x + 1].islower():
-                self.make_check_and_add_move(start, (x + 1, y_new),
-                                             NOT_EN_PASSANT, moves)
+                self.process_move(start, (x + 1, y_new),
+                                  NOT_EN_PASSANT, moves)
         else:
             if 0 <= x - 1 <= 7 and self.pos[y_new][x - 1].isupper():
-                self.make_check_and_add_move(start, (x - 1, y_new),
-                                             NOT_EN_PASSANT, moves)
+                self.process_move(start, (x - 1, y_new),
+                                  NOT_EN_PASSANT, moves)
             if 0 <= x + 1 <= 7 and self.pos[y_new][x + 1].isupper():
-                self.make_check_and_add_move(start, (x + 1, y_new),
-                                             NOT_EN_PASSANT, moves)
+                self.process_move(start, (x + 1, y_new),
+                                  NOT_EN_PASSANT, moves)
 
         # En passant moves
         if self.en_passant is not None:
             x1, y1 = self.en_passant
             if 0 <= x - 1 <= 7 and x - 1 == x1 and y_new == y1 and y == y4:
-                self.make_check_and_add_move(start, (x1, y1), IS_EN_PASSANT,
-                                             moves)
+                self.process_move(start, (x1, y1), IS_EN_PASSANT,
+                                  moves)
             elif 0 <= x + 1 <= 7 and x + 1 == x1 and y_new == y1 and y == y4:
-                self.make_check_and_add_move(start, (x1, y1), IS_EN_PASSANT,
-                                             moves)
+                self.process_move(start, (x1, y1), IS_EN_PASSANT,
+                                  moves)
 
     def is_end_of_game(self, moves):
         """
@@ -908,7 +900,7 @@ class Position:
 
         return status
 
-    def make_check_and_add_move(self, start, end, en_passant, moves):
+    def process_move(self, start, end, en_passant, moves):
         """
         Makes a move and checks whether it is a legal move. If the move is
         legal, it is added to the moves list. Assumes that the enemy king is
