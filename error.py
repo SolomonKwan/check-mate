@@ -23,12 +23,8 @@ def check_args(argv):
     if len(argv) != ARGUMENT_LEN:
         return INCORRECT_ARGS
 
-    player1 = argv[1]
-    player2 = argv[2]
-
     valid_players = ['h', 'c']
-
-    if player1 not in valid_players or player2 not in valid_players:
+    if argv[1] not in valid_players or argv[2] not in valid_players:
         return INCORRECT_ARGS
 
     return NORMAL
