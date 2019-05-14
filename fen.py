@@ -37,12 +37,9 @@ def check_fen(line, white, black):
         return error.INVALID_FEN
 
     # Check that pawns do not appear on own home rank or on enemy home rank
-    for item in slash_split[0]:
-        if item == 'p' or item == 'P':
-            return error.INVALID_FEN
-    for item in slash_split[7]:
-        if item == 'P' or item == 'p':
-            return error.INVALID_FEN
+    if 'P' in slash_split[0] or 'p' in slash_split[0] or 'P' in \
+            slash_split[7] or 'p' in slash_split[7]:
+        return True
 
     # Check each rank and make sure each king appears once
     kings = [0, 0]
@@ -138,15 +135,14 @@ def check_kings(board_lines):
 
     # Find the coordinates of the kings
     for rank in board_lines:
-        for item in rank:
-            if item == 'K':
-                x = rank.index(item)
-                y = board_lines.index(rank)
-                white_king = (x, y)
-            elif item == 'k':
-                x = rank.index(item)
-                y = board_lines.index(rank)
-                black_king = (x, y)
+        if 'K' in rank:
+            x = rank.index('K')
+            y = board_lines.index(rank)
+            white_king = (x, y)
+        if 'k' in rank:
+            x = rank.index('k')
+            y = board_lines.index(rank)
+            black_king = (x, y)
 
     x1, y1 = white_king
     x2, y2 = black_king
@@ -253,6 +249,12 @@ def check_castling(board_lines, castling):
 
 
 def check_moves(halfmoves, fullmoves):
+    """
+    Check that the halfmoves and full moves are valid.
+    :param halfmoves: The halfmoves value.
+    :param fullmoves: The fullmoves value.
+    :return: The appropriate error code if invalid.
+    """
     # Check for an integer
     try:
         int(halfmoves)
@@ -265,6 +267,8 @@ def check_moves(halfmoves, fullmoves):
         return error.INVALID_FEN
     if int(fullmoves) <= 0:
         return error.INVALID_FEN
+
+    return error.NORMAL
 
 
 def get_position(fen_string, piece_count):
