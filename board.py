@@ -893,11 +893,9 @@ class Position:
         x, y = start
         x_new, y_new = end
 
-        # Copy the current position
-        last_pos = copy.deepcopy(self.pos)
-
-        # The piece to move
+        # The piece to move and the end piece
         piece = self.pos[y][x]
+        end_piece = self.pos[y_new][x_new]
 
         # Actually move the piece
         self.pos[y][x] = ' '
@@ -916,7 +914,14 @@ class Position:
             moves.append((start, end))
 
         # Undo the move
-        self.pos = copy.deepcopy(last_pos)
+        self.pos[y][x] = piece
+        self.pos[y_new][x_new] = end_piece
+
+        if en_passant:
+            if self.turn:
+                self.pos[y_new + 1][x_new] = 'p'
+            else:
+                self.pos[y_new - 1][x_new] = 'P'
 
     def insufficient_material(self):
         """
