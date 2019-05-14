@@ -1,8 +1,6 @@
 
-import copy
 import itertools
 import random
-from timeit import default_timer as timer
 
 import error
 import fen
