@@ -133,27 +133,27 @@ class Position:
         en passant and castling privileges and the current FEN string.
         :return: Nothing.
         """
-        print('  0 1 2 3 4 5 6 7', end='\n')
-        print(''.join([str(8 - i) + ' ' + item + ' ' if j % 8 == 0 and
-                      item != ' ' else str(8 - i) + ' . ' if j % 8 == 0 and
-                      item == ' ' else item + ' ' + str(i) + '\n' if
-                      j % 8 == 7 and item != ' ' else '. ' + str(i) + '\n' if
-                      j % 8 == 7 and item == ' ' else item + ' ' if
-                      item != ' ' else '. ' for i, rank in
-                      enumerate(self.pos) for j, item in enumerate(rank)]).
-              rstrip('\n'))
-        print('  a b c d e f g h', end='\n')
 
-        # Print the information regarding the current board position
-        print(''.
-              join(('Last move: ', str(start), ' ', str(end),
-                    '\nTurn: ', str(self.turn),
-                    '\nNum of legal moves: ', str(len(self.get_legal_moves())),
-                    '\nEn passant: ', str(self.en_passant),
-                    '\nCastling: ', str(self.castling),
-                    '\nHalfmove: ', str(self.halfmove),
-                    '\nFullmove: ', str(self.fullmove),
-                    '\n', str(self.current_fen), '\n')))
+        # Make the board to print
+        message = ''.join([str(8 - i) + ' ' + item + ' ' if j % 8 == 0 and
+                          item != ' ' else str(8 - i) + ' . ' if j % 8 == 0
+                          and item == ' ' else item + ' ' + str(i) + '\n' if
+                          j % 8 == 7 and item != ' ' else '. ' + str(i) +
+                          '\n' if j % 8 == 7 and item == ' ' else item + ' '
+                           if item != ' ' else '. ' for i, rank in
+                           enumerate(self.pos) for j, item in enumerate(rank)])
+        message = ''.join(('  0 1 2 3 4 5 6 7\n', message,
+                           '  a b c d e f g h\n'))
+
+        # Add information regarding the current board position then print
+        message = ''.join((message, 'Last move: ', str(start), ' ', str(end),
+                           '\nTurn: ', str(self.turn),
+                           '\nEn passant: ', str(self.en_passant),
+                           '\nCastling: ', str(self.castling),
+                           '\nHalfmove: ', str(self.halfmove),
+                           '\nFullmove: ', str(self.fullmove),
+                           '\n', str(self.current_fen), '\n'))
+        print(f"{message}")
 
     def kings_apart(self, coordinates):
         """
@@ -358,20 +358,18 @@ class Position:
             queen = 'Q'
             bishop = 'B'
 
-        # Search for a diagonal attack
-        for i in [-1, 1]:
-            for j in [-1, 1]:
-                for k in range(1, 8):
-                    if 0 <= x + i * k <= 7 and 0 <= y + j * k <= 7:
-                        if self.pos[y + j * k][x + i * k] != ' ' and \
-                                self.pos[y + j * k][x + i * k] != queen and \
-                                self.pos[y + j * k][x + i * k] != bishop:
-                            break
-                        elif self.pos[y + j * k][x + i * k] == queen or \
-                                self.pos[y + j * k][x + i * k] == bishop:
-                            return True
-                    else:
+        for i, j in [(-1, -1), (-1, 1), (1, -1), (1, 1)]:
+            for k in range(1, 8):
+                if 0 <= x + i * k <= 7 and 0 <= y + j * k <= 7:
+                    if self.pos[y + j * k][x + i * k] != ' ' and \
+                            self.pos[y + j * k][x + i * k] != queen and \
+                            self.pos[y + j * k][x + i * k] != bishop:
                         break
+                    elif self.pos[y + j * k][x + i * k] == queen or \
+                            self.pos[y + j * k][x + i * k] == bishop:
+                        return True
+                else:
+                    break
         return False
 
     def knight_attack(self, coordinates):
@@ -385,18 +383,13 @@ class Position:
         x, y = coordinates
 
         # Determine the knight piece
-        if self.turn:
-            knight = 'n'
-        else:
-            knight = 'N'
+        knight = 'n' if self.turn else 'N'
 
         # Search for a knight attack
         for i, j in itertools.permutations([-1, 1, -2, 2], 2):
-            if 0 <= x + i <= 7 and 0 <= y + j <= 7:
-                char = self.pos[y + j][x + i]
-                if char == knight:
+            if abs(i) != abs(j) and 0 <= x + i <= 7 and 0 <= y + j <= 7:
+                if self.pos[y + j][x + i] == knight:
                     return True
-
         return False
 
     def pawn_attack(self, coordinates):
@@ -407,8 +400,6 @@ class Position:
         :return: True if the square is attacked, false otherwise.
         """
 
-        x, y = coordinates
-
         # Determine the pawn piece
         if self.turn:
             pawn = 'p'
@@ -418,13 +409,12 @@ class Position:
             i = 1
 
         # Search for an attack from an enemy pawn
-        if 0 <= y + i <= 7 and 0 <= x - 1 <= 7:
-            if self.pos[y + i][x - 1] == pawn:
+        if 0 <= coordinates[1] + i <= 7 and 0 <= coordinates[0] - 1 <= 7:
+            if self.pos[coordinates[1] + i][coordinates[0] - 1] == pawn:
                 return True
-        if 0 <= y + i <= 7 and 0 <= x + 1 <= 7:
-            if self.pos[y + i][x + 1] == pawn:
+        if 0 <= coordinates[1] + i <= 7 and 0 <= coordinates[0] + 1 <= 7:
+            if self.pos[coordinates[1] + i][coordinates[0] + 1] == pawn:
                 return True
-
         return False
 
     def get_legal_moves(self):
@@ -583,26 +573,19 @@ class Position:
                 x += 1
             y += 1
 
-        # Determine the knights range
         for knight in knights:
-            x, y = knight
+            for i, j in itertools.permutations([-2, -1, 1, 2], 2):
+                x_new = knight[0] + i
+                y_new = knight[1] + j
+                if abs(i) != abs(j) and 0 <= x_new <= 7 and 0 <= y_new <= 7:
+                    char = self.pos[y_new][x_new]
+                    if self.turn and char.islower() or char == ' ':
+                        self.process_move(knight, (x_new, y_new),
+                                          NOT_EN_PASSANT, moves)
 
-            for i in [-2, -1, 1, 2]:
-                for j in [-2, -1, 1, 2]:
-                    x_new = x + i
-                    y_new = y + j
-                    if abs(i) != abs(j) and 0 <= x_new <= 7 and 0 <= y_new \
-                            <= 7:
-                        char = self.pos[y_new][x_new]
-                        if self.turn and char.islower() or char == ' ':
-                            self.process_move(knight, (x_new,
-                                                       y_new),
-                                              NOT_EN_PASSANT, moves)
-
-                        elif not self.turn and char.isupper() or char == ' ':
-                            self.process_move(knight, (x_new,
-                                                       y_new),
-                                              NOT_EN_PASSANT, moves)
+                    elif not self.turn and char.isupper() or char == ' ':
+                        self.process_move(knight, (x_new, y_new),
+                                          NOT_EN_PASSANT, moves)
 
     def get_pawn_moves(self, moves):
         """
@@ -631,22 +614,22 @@ class Position:
 
         # Find the pawn movements
         for item in pawns:
-            x, y = item
-
             if self.turn:
-                y_new = y - 1
+                y_new = item[1] - 1
                 y1 = WHITE_PAWN_RANK
                 y2 = WHITE_IN_BETWEEN_RANK
                 y3 = WHITE_TWO_SQUARE_MOVE_RANK
                 y4 = WHITE_EN_PASSANT_RANK
-                self.check_pawn_moves(moves, (x, y), y_new, y1, y2, y3, y4)
+                self.check_pawn_moves(moves, (item[0], item[1]), y_new, y1,
+                                      y2, y3, y4)
             else:
-                y_new = y + 1
+                y_new = item[1] + 1
                 y1 = BLACK_PAWN_RANK
                 y2 = BLACK_IN_BETWEEN_RANK
                 y3 = BLACK_TWO_SQUARE_MOVE_RANK
                 y4 = BLACK_EN_PASSANT_RANK
-                self.check_pawn_moves(moves, (x, y), y_new, y1, y2, y3, y4)
+                self.check_pawn_moves(moves, (item[0], item[1]), y_new, y1,
+                                      y2, y3, y4)
 
     def get_vertical_range(self, start, moves):
         """
@@ -657,17 +640,13 @@ class Position:
         :return: Nothing.
         """
 
-        x, y = start
-
         # Get the piece moves from inside outwards
         for i in [-1, 1]:
-            for j in list(range(1, 8)):
-                y_new = y + i * j
-
-                if 0 <= y_new <= 7:
-                    char = self.pos[y_new][x]
-
-                    if self.get_moves(char, start, x, y_new, moves):
+            for j in range(1, 8):
+                if 0 <= start[1] + i * j <= 7:
+                    if self.get_moves(self.pos[start[1] + i * j][start[0]],
+                                      start, start[0], start[1] + i * j,
+                                      moves):
                         break
 
     def get_horizontal_range(self, start, moves):
