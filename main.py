@@ -10,9 +10,7 @@ Created November 2018.
 @TODO:
     Add Chess960 option
     Add AI
-    Add PGN
     Add GUI
-    Fix the unresolved reference error of the pgn.py import
 """
 
 import copy
@@ -33,7 +31,6 @@ def run_game():
     """
 
     moves = []
-    # print(ai.minimax(game, 2, True, moves))
     game.display((0, 0), (0, 0))
     while True:
 
