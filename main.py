@@ -13,7 +13,6 @@ Created November 2018.
     Add GUI
 """
 
-import copy
 import random
 import sys
 from timeit import default_timer as timer
@@ -43,12 +42,12 @@ def run_game():
         # Check and record board positions
         found = False
         for pos, count in moves:
-            if pos == game:
+            if pos == game.current_fen.split(' ')[0]:
                 found = True
                 new_count = count + 1
                 moves[moves.index((pos, count))] = (pos, new_count)
         if not found:
-            moves.append((copy.deepcopy(game), 1))
+            moves.append((game.current_fen.split(' ')[0], 1))
 
         # Process player turns
         legal_moves = game.get_legal_moves()
