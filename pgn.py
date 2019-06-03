@@ -19,6 +19,13 @@ def set_up_pgn():
 
 
 def update_pgn(game, start, end):
+    """
+    Updates the pgn.
+    :param game: The Position instance representing the game.
+    :param start: The starting square of the move just made.
+    :param end: The end square of the move just made.
+    :return: Nothing.
+    """
 
     x, y = start
     x_new, y_new = end
@@ -65,6 +72,15 @@ def update_pgn(game, start, end):
 
 
 def add_move(game, piece, end_piece, start, end):
+    """
+    Adds the move made by a piece other than a king or pawn to the pgn.
+    :param game: The position instance representing the game.
+    :param piece: The piece that is being moved.
+    :param end_piece: The piece that is in the end square.
+    :param start: The starting square of the move.
+    :param end: The ending square of the move.
+    :return: Nothing.
+    """
     x, y = start
     x_new, y_new = end
 
@@ -91,6 +107,14 @@ def add_move(game, piece, end_piece, start, end):
 
 
 def check_for_ambiguity(game, piece, start, end):
+    """
+    Checks if there is ambiguity as to which piece is moving.
+    :param game: The Position instance of the game.
+    :param piece: The piece that is being moved.
+    :param start: The start square of the move.
+    :param end: The end square of the move.
+    :return: The ambiguity type.
+    """
     x_old, y_old = start
     x_new, y_new = end
 
@@ -133,6 +157,14 @@ def check_for_ambiguity(game, piece, start, end):
 
 
 def find_sol_type(pieces, x_old, y_old):
+    """
+    Determines the type of ambiguity.
+    :param pieces: The pieces of a certain type and colour on the board that
+    can reach the same square.
+    :param x_old: The old x coordinates.
+    :param y_old: The old y coordinates.
+    :return: The ambiguity type.
+    """
     # Check for possible ambiguity. If none, return.
     if len(pieces) == 1:
         return NO_AMBIGUITY
@@ -150,9 +182,17 @@ def find_sol_type(pieces, x_old, y_old):
 
 
 def get_vertical_attacks(pieces, end, piece, game):
+    """
+    Gets the pieces of the same type that attack the end square vertically.
+    :param pieces: The pieces that can reach the end square.
+    :param end: The end square coordinates.
+    :param piece: The piece to find.
+    :param game: The Position instance of the game.
+    :return: Nothing.
+    """
     x, y = end
     for i in [-1, 1]:
-        for j in list(range(1, 8)):
+        for j in range(1, 8):
             y_new = y + i * j
 
             if 0 <= y_new <= 7:
@@ -167,9 +207,17 @@ def get_vertical_attacks(pieces, end, piece, game):
 
 
 def get_horizontal_attacks(pieces, end, piece, game):
+    """
+    Gets the pieces of the same type that attack the end square horizontally.
+    :param pieces: The pieces that can attack the end square horizontally.
+    :param end: The end square coordinates.
+    :param piece: The piece to find.
+    :param game: The Position instance of the game.
+    :return: Nothing.
+    """
     x, y = end
     for i in [-1, 1]:
-        for j in list(range(1, 8)):
+        for j in range(1, 8):
             x_new = x + i * j
 
             if 0 <= x_new <= 7:
@@ -184,10 +232,18 @@ def get_horizontal_attacks(pieces, end, piece, game):
 
 
 def get_diagonal_attacks(pieces, end, piece, game):
+    """
+    Gets the pieces that can attack the end square diagonally.
+    :param pieces: The pieces that can attack the end square diagonally.
+    :param end: The end square coordinates.
+    :param piece: The piece to search for.
+    :param game: The Position instance of the game.
+    :return: Nothing.
+    """
     x, y = end
     for i in [-1, 1]:
         for j in [-1, 1]:
-            for k in list(range(1, 8)):
+            for k in range(1, 8):
                 x_new = x + i * k
                 y_new = y + j * k
 
@@ -203,12 +259,23 @@ def get_diagonal_attacks(pieces, end, piece, game):
 
 
 def add_check(game):
+    """
+    Adds to check symbol if a king is in check.
+    :param game: The Position instance of the game.
+    :return: Nothing.
+    """
     if game.is_attacked(game.get_king_coordinates()):
         game.pgn = ''.join((game.pgn, '+'))
     game.pgn += ' '
 
 
 def add_results(game, status):
+    """
+    Adds the result of the game.
+    :param game: The Position instance of the game.
+    :param status: The end of game status.
+    :return:
+    """
     if status == error.WHITE_WINS:
         game.pgn = game.pgn[:-2]
         game.pgn = ''.join((game.pgn, '# 1-0'))

@@ -682,7 +682,7 @@ class Position:
         # Determine the diagonal range from inside outwards
         for i in [-1, 1]:
             for j in [-1, 1]:
-                for k in list(range(1, 8)):
+                for k in range(1, 8):
                     x_new = x + i * k
                     y_new = y + j * k
 
