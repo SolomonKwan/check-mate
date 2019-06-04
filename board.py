@@ -2,9 +2,12 @@
 import itertools
 import random
 
+from collections import Counter
 import error
 import fen
 import pgn
+
+from timeit import default_timer as timer
 
 BLACK = 0
 BLACK_PAWN_RANK = 1
@@ -49,6 +52,31 @@ pieces = {
     'K': '\u2654', 'Q': '\u2655', 'R': '\u2656', 'B': '\u2657', 'N': '\u2658',
     'P': '\u2659', 'k': '\u265A', 'q': '\u265B', 'r': '\u265C', 'b': '\u265D',
     'n': '\u265E', 'p': '\u265F', ' ': '\u00A0'
+}
+
+# The direction each piece can move in the form (x, y)
+directions = {
+    'k': [
+        (0, 1), (1, 0), (0, -1), (-1, 0), (1, 1), (1, -1), (-1, 1), (-1, -1),
+    ],
+    'q': [
+        (0, 1), (1, 0), (0, -1), (-1, 0), (1, 1), (1, -1), (-1, 1), (-1, -1)
+    ],
+    'b': [
+        (1, 1), (1, -1), (-1, 1), (-1, -1)
+    ],
+    'n': [
+        (1, 2), (2, 1), (-1, -2), (-2, -1), (-1, 2), (1, -2), (2, -1), (-2, 1)
+    ],
+    'r': [
+        (0, 1), (1, 0), (0, -1), (-1, 0)
+    ],
+    'P': [
+        (0, -1), (0, -2), (1, -1), (-1, -1)
+    ],
+    'p': [
+        (0, 1), (0, 2), (1, 1), (-1, 1)
+    ]
 }
 
 
@@ -115,14 +143,9 @@ class Position:
         king = 'K' if self.turn else 'k'
 
         # Find the kings coordinates
-        x, y = None, None
         for rank in self.pos:
             if king in rank:
-                x = rank.index(king)
-                y = self.pos.index(rank)
-                break
-
-        return x, y
+                return rank.index(king), self.pos.index(rank)
 
     def display(self, start, end):
         """
@@ -132,25 +155,28 @@ class Position:
         :return: Nothing.
         """
 
-        # Make the board to print
-        message = ''.join([str(8 - i) + ' ' + item + ' ' if j % 8 == 0 and
-                          item != ' ' else str(8 - i) + ' . ' if j % 8 == 0
-                          and item == ' ' else item + ' ' + str(i) + '\n' if
-                          j % 8 == 7 and item != ' ' else '. ' + str(i) +
-                          '\n' if j % 8 == 7 and item == ' ' else item + ' '
-                           if item != ' ' else '. ' for i, rank in
-                           enumerate(self.pos) for j, item in enumerate(rank)])
-        message = ''.join(('  0 1 2 3 4 5 6 7\n', message,
-                           '  a b c d e f g h\n'))
+        # Add file coordinates and then make the board to print
+        message = '   0 1 2 3 4 5 6 7\n'
+        i = 0
+        for rank in self.pos:
+            rank = ['.' if item == ' ' else item for item in rank]
+            message = ' '.join(
+                [message, str(8 - i), *rank, str(i) + '\n']
+            )
+            i += 1
 
-        # Add information regarding the current board position then print
-        message = ''.join((message, 'Last move: ', str(start), ' ', str(end),
-                           '\nTurn: ', str(self.turn),
-                           '\nEn passant: ', str(self.en_passant),
-                           '\nCastling: ', str(self.castling),
-                           '\nHalfmove: ', str(self.halfmove),
-                           '\nFullmove: ', str(self.fullmove),
-                           '\n', str(self.current_fen), '\n'))
+        # Add the files and information regarding the current board position
+        # then print
+        message = ''.join(
+            [message, '   a b c d e f g h\n',
+             'Last move: ', str(start), ' ', str(end),
+             '\nTurn: ', str(self.turn),
+             '\nEn passant: ', str(self.en_passant),
+             '\nCastling: ', str(self.castling),
+             '\nHalfmove: ', str(self.halfmove),
+             '\nFullmove: ', str(self.fullmove),
+             '\n', str(self.current_fen), '\n']
+        )
         print(f"{message}")
 
     def kings_apart(self, coordinates):
@@ -164,13 +190,10 @@ class Position:
         king = 'k' if self.turn else 'K'
         x, y = coordinates
 
-        # Check if the kings are adjacent
-        for i in [-1, 0, 1]:
-            for j in [-1, 0, 1]:
-                if (i != 0 or j != 0) and (0 <= x + i <= 7 and
-                                           0 <= y + j <= 7) and \
-                        (self.pos[y + j][x + i] == king):
-                    return False
+        for i, j in directions['k']:
+            if 0 <= x + i <= 7 and 0 <= y + j <= 7 and \
+                    self.pos[y + j][x + i] == king:
+                return False
         return True
 
     def make_move(self, start, end, en_passant):
@@ -356,7 +379,7 @@ class Position:
             queen = 'Q'
             bishop = 'B'
 
-        for i, j in [(-1, -1), (-1, 1), (1, -1), (1, 1)]:
+        for i, j in directions['b']:
             for k in range(1, 8):
                 if 0 <= x + i * k <= 7 and 0 <= y + j * k <= 7:
                     if self.pos[y + j * k][x + i * k] != ' ' and \
@@ -384,8 +407,8 @@ class Position:
         knight = 'n' if self.turn else 'N'
 
         # Search for a knight attack
-        for i, j in itertools.permutations([-1, 1, -2, 2], 2):
-            if abs(i) != abs(j) and 0 <= x + i <= 7 and 0 <= y + j <= 7:
+        for i, j in directions['n']:
+            if 0 <= x + i <= 7 and 0 <= y + j <= 7:
                 if self.pos[y + j][x + i] == knight:
                     return True
         return False

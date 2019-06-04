@@ -234,7 +234,8 @@ def get_horizontal_attacks(pieces, end, piece, game):
 def get_diagonal_attacks(pieces, end, piece, game):
     """
     Gets the pieces that can attack the end square diagonally.
-    :param pieces: The pieces that can attack the end square diagonally.
+    :param pieces: The list of pieces that can attack the end square
+    diagonally.
     :param end: The end square coordinates.
     :param piece: The piece to search for.
     :param game: The Position instance of the game.

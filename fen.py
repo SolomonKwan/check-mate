@@ -315,8 +315,8 @@ def get_position(fen_string, piece_count):
 
 def get_turn(char):
     """
-    Determines the boolean value representing player turn. Assumes that the char
-    is valid (i.e. one of 'w' or 'b').
+    Determines the boolean value representing player turn. Assumes that the
+    char is valid (i.e. one of 'w' or 'b').
     :param char: The char representing the player whose turn it is.
     :return: The player turn boolean.
     """
@@ -328,8 +328,8 @@ def get_turn(char):
 
 def get_en_passant(string):
     """
-    Determines the coordinates of the en passant square. Assumes that the string
-    is in the correct format.
+    Determines the coordinates of the en passant square. Assumes that the
+    string is in the correct format.
     :param string: The en passant string.
     :return: A tuple representing the x and y coordinates of the square.
     """
