@@ -10,21 +10,19 @@ import pgn
 from timeit import default_timer as timer
 
 BLACK = 0
-BLACK_PAWN_RANK = 1
-BLACK_IN_BETWEEN_RANK = 2
-BLACK_TWO_SQUARE_MOVE_RANK = 3
-BLACK_EN_PASSANT_RANK = 4
-BLACK_KING_SIDE_CASTLE = 2
-BLACK_QUEEN_SIDE_CASTLE = 3
-
 WHITE = 1
-WHITE_PAWN_RANK = 6
-WHITE_IN_BETWEEN_RANK = 5
-WHITE_TWO_SQUARE_MOVE_RANK = 4
-WHITE_EN_PASSANT_RANK = 3
+
+SEVENTH_RANK = 1
+SIXTH_RANK = 2
+FIFTH_RANK = 3
+FOURTH_RANK = 4
+THIRD_RANK = 5
+SECOND_RANK = 6
+
 WHITE_KING_SIDE_CASTLE = 0
 WHITE_QUEEN_SIDE_CASTLE = 1
-
+BLACK_KING_SIDE_CASTLE = 2
+BLACK_QUEEN_SIDE_CASTLE = 3
 
 IS_EN_PASSANT = True
 NOT_EN_PASSANT = False
@@ -57,19 +55,19 @@ pieces = {
 
 # The direction each piece can move in the form (x, y)
 directions = {
-    'k': [
+    'king': [
         (0, 1), (1, 0), (0, -1), (-1, 0), (1, 1), (1, -1), (-1, 1), (-1, -1),
     ],
-    'q': [
+    'queen': [
         (0, 1), (1, 0), (0, -1), (-1, 0), (1, 1), (1, -1), (-1, 1), (-1, -1)
     ],
-    'b': [
+    'bishop': [
         (1, 1), (1, -1), (-1, 1), (-1, -1)
     ],
-    'n': [
+    'knight': [
         (1, 2), (2, 1), (-1, -2), (-2, -1), (-1, 2), (1, -2), (2, -1), (-2, 1)
     ],
-    'r': [
+    'rook': [
         (0, 1), (1, 0), (0, -1), (-1, 0)
     ],
     'P': [
@@ -95,9 +93,10 @@ class Position:
         self.en_passant = fen.get_en_passant(position.split(' ')[3])
         self.halfmove = int(position.split(' ')[4])
         self.fullmove = int(position.split(' ')[5])
-        self.current_fen = fen.get_fen(self.pos, self.turn, self.castling,
-                                       self.en_passant, self.halfmove,
-                                       self.fullmove)
+        self.current_fen = fen.get_fen(
+            self.pos, self.turn, self.castling, self.en_passant, self.halfmove,
+            self.fullmove
+        )
         self.white = white
         self.black = black
         self.pgn = pgn.set_up_pgn()
@@ -190,7 +189,7 @@ class Position:
         king = 'k' if self.turn else 'K'
         x, y = coordinates
 
-        for i, j in directions['k']:
+        for i, j in directions['king']:
             if 0 <= x + i <= 7 and 0 <= y + j <= 7 and \
                     self.pos[y + j][x + i] == king:
                 return False
@@ -254,20 +253,16 @@ class Position:
 
         # En passant update
         self.en_passant = None
-        if piece == 'P' and y == WHITE_PAWN_RANK and \
-                y_new == WHITE_TWO_SQUARE_MOVE_RANK:
-            self.en_passant = (x, WHITE_IN_BETWEEN_RANK)
-        elif piece == 'p' and y == BLACK_PAWN_RANK and \
-                y_new == BLACK_TWO_SQUARE_MOVE_RANK:
-            self.en_passant = (x, BLACK_IN_BETWEEN_RANK)
+        if piece == 'P' and y == SECOND_RANK and y_new == FOURTH_RANK:
+            self.en_passant = (x, THIRD_RANK)
+        elif piece == 'p' and y == SEVENTH_RANK and y_new == FIFTH_RANK:
+            self.en_passant = (x, SIXTH_RANK)
 
-        # Update halfmove clock
+        # Update halfmove and fullmove clock
         if piece == 'P' or piece == 'p' or end_piece != ' ':
             self.halfmove = 0
         else:
             self.halfmove += 1
-
-        # Update fullmove clock
         if not self.turn:
             self.fullmove += 1
 
@@ -278,9 +273,11 @@ class Position:
         self.turn = 1 - self.turn
 
         # Update FEN. This is used to determine draw by 3 fold repetition.
-        self.current_fen = fen.get_fen(self.pos, self.turn, self.castling,
-                                       self.en_passant, self.halfmove,
-                                       self.fullmove)
+        self.current_fen = fen.get_fen(
+            self.pos, self.turn, self.castling,
+            self.en_passant, self.halfmove,
+            self.fullmove
+        )
 
     def is_attacked(self, coordinates):
         """
@@ -316,17 +313,14 @@ class Position:
 
         # Determine the queen and rook pieces
         if self.turn:
-            queen = 'q'
-            rook = 'r'
+            enemies = ['q', 'r']
         else:
-            queen = 'Q'
-            rook = 'R'
+            enemies = ['Q', 'R']
 
         for i in [-1, 1]:
             for j in range(1, 8):
                 if 0 <= x + i * j <= 7:
-                    if self.pos[y][x + i * j] == rook or \
-                            self.pos[y][x + i * j] == queen:
+                    if self.pos[y][x + i * j] in enemies:
                         return True
                     elif self.pos[y][x + i * j] != ' ':
                         break
@@ -335,8 +329,7 @@ class Position:
 
             for j in range(1, 8):
                 if 0 <= y + i * j <= 7:
-                    if self.pos[y + i * j][x] == rook or \
-                            self.pos[y + i * j][x] == queen:
+                    if self.pos[y + i * j][x] in enemies:
                         return True
                     elif self.pos[y + i * j][x] != ' ':
                         break
@@ -356,21 +349,18 @@ class Position:
 
         # Determine the queen and bishop pieces
         if self.turn:
-            queen = 'q'
-            bishop = ['a', 'b']
+            enemies = ['q', 'a', 'b']
         else:
-            queen = 'Q'
-            bishop = ['A', 'B']
+            enemies = ['Q', 'A', 'B']
 
-        for i, j in directions['b']:
+        for i, j in directions['bishop']:
             for k in range(1, 8):
                 if 0 <= x + i * k <= 7 and 0 <= y + j * k <= 7:
-                    if self.pos[y + j * k][x + i * k] != ' ' and \
-                            self.pos[y + j * k][x + i * k] != queen and \
-                            self.pos[y + j * k][x + i * k] not in bishop:
+                    if self.pos[y + j * k][x + i * k] == ' ':
+                        continue
+                    elif self.pos[y + j * k][x + i * k] not in enemies:
                         break
-                    elif self.pos[y + j * k][x + i * k] == queen or \
-                            self.pos[y + j * k][x + i * k] in bishop:
+                    else:
                         return True
                 else:
                     break
@@ -390,10 +380,10 @@ class Position:
         knight = 'n' if self.turn else 'N'
 
         # Search for a knight attack
-        for i, j in directions['n']:
-            if 0 <= x + i <= 7 and 0 <= y + j <= 7:
-                if self.pos[y + j][x + i] == knight:
-                    return True
+        for i, j in directions['knight']:
+            if 0 <= x + i <= 7 and 0 <= y + j <= 7 and \
+                    self.pos[y + j][x + i] == knight:
+                return True
         return False
 
     def pawn_attack(self, coordinates):
@@ -620,18 +610,18 @@ class Position:
         for item in pawns:
             if self.turn:
                 y_new = item[1] - 1
-                y1 = WHITE_PAWN_RANK
-                y2 = WHITE_IN_BETWEEN_RANK
-                y3 = WHITE_TWO_SQUARE_MOVE_RANK
-                y4 = WHITE_EN_PASSANT_RANK
+                y1 = SECOND_RANK
+                y2 = THIRD_RANK
+                y3 = FOURTH_RANK
+                y4 = FIFTH_RANK
                 self.check_pawn_moves(moves, (item[0], item[1]), y_new, y1,
                                       y2, y3, y4)
             else:
                 y_new = item[1] + 1
-                y1 = BLACK_PAWN_RANK
-                y2 = BLACK_IN_BETWEEN_RANK
-                y3 = BLACK_TWO_SQUARE_MOVE_RANK
-                y4 = BLACK_EN_PASSANT_RANK
+                y1 = SEVENTH_RANK
+                y2 = SIXTH_RANK
+                y3 = FIFTH_RANK
+                y4 = FOURTH_RANK
                 self.check_pawn_moves(moves, (item[0], item[1]), y_new, y1,
                                       y2, y3, y4)
 
@@ -842,15 +832,18 @@ class Position:
                 self.process_move(start, (x1, y1), IS_EN_PASSANT,
                                   moves)
 
-    def is_end_of_game(self, moves):
+    def is_end_of_game(self, moves, legal_moves):
         """
         Check if it is the end of game. If it is a draw, print the draw message
         and reason why. If it is a stalemate, print the stalemate message. If
         it is checkmate, print the checkmate message.
-        :return: The appropriate exit status.
+        :param moves: The record of all previous states of the board.
+        :param legal_moves: The list of legal moves from the current position.
+        In the form ((x_start, y_start), (x_end, y_end)).
+        :return:
         """
 
-        status = 0
+        status = error.NORMAL
 
         # Three fold repetition
         for key, value in moves:
@@ -867,12 +860,12 @@ class Position:
 
         # Check for stalemate
         elif not self.is_attacked(self.get_king_coordinates()) and \
-                len(self.get_legal_moves()) == 0:
+                len(legal_moves) == 0:
             status = error.STALEMATE
 
         # Check for checkmate
         elif self.is_attacked(self.get_king_coordinates()) and \
-                len(self.get_legal_moves()) == 0:
+                len(legal_moves) == 0:
             if self.turn:
                 status = error.BLACK_WINS
             else:

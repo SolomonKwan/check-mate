@@ -13,6 +13,7 @@ Created November 2018.
     Add GUI
     Improve the check and record board position of run_game()
     Check the light square and dark squares are correct
+    Improve the human move input
 """
 
 import random
@@ -36,7 +37,8 @@ def run_game():
     while True:
 
         # Check end of game
-        end_of_game = game.is_end_of_game(moves)
+        legal_moves = game.get_legal_moves()
+        end_of_game = game.is_end_of_game(moves, legal_moves)
         if end_of_game:
             pgn.add_results(game, end_of_game)
             return end_of_game
@@ -52,7 +54,6 @@ def run_game():
             moves.append((game.current_fen.split(' ')[0], 1))
 
         # Process player turns
-        legal_moves = game.get_legal_moves()
         if (game.turn and white == 'c') or (not game.turn and black == 'c'):
             # Computer turn
             random_move = legal_moves[random.randint(0, len(legal_moves) - 1)]
