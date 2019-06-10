@@ -11,6 +11,8 @@ Created November 2018.
     Add Chess960 option
     Add AI
     Add GUI
+    Improve the check and record board position of run_game()
+    Check the light square and dark squares are correct
 """
 
 import random
@@ -34,10 +36,10 @@ def run_game():
     while True:
 
         # Check end of game
-        status = game.is_end_of_game(moves)
-        if status:
-            pgn.add_results(game, status)
-            return status
+        end_of_game = game.is_end_of_game(moves)
+        if end_of_game:
+            pgn.add_results(game, end_of_game)
+            return end_of_game
 
         # Check and record board positions
         found = False
