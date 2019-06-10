@@ -25,6 +25,7 @@ WHITE_EN_PASSANT_RANK = 3
 WHITE_KING_SIDE_CASTLE = 0
 WHITE_QUEEN_SIDE_CASTLE = 1
 
+
 IS_EN_PASSANT = True
 NOT_EN_PASSANT = False
 
@@ -139,10 +140,8 @@ class Position:
         :return: A tuple (x, y) of the king's coordinates.
         """
 
-        # Determine the king character
+        # Find the king's coordinates
         king = 'K' if self.turn else 'k'
-
-        # Find the kings coordinates
         for rank in self.pos:
             if king in rank:
                 return rank.index(king), self.pos.index(rank)
@@ -168,14 +167,16 @@ class Position:
         # Add the files and information regarding the current board position
         # then print
         message = ''.join(
-            [message, '   a b c d e f g h\n',
-             'Last move: ', str(start), ' ', str(end),
-             '\nTurn: ', str(self.turn),
-             '\nEn passant: ', str(self.en_passant),
-             '\nCastling: ', str(self.castling),
-             '\nHalfmove: ', str(self.halfmove),
-             '\nFullmove: ', str(self.fullmove),
-             '\n', str(self.current_fen), '\n']
+            [
+                message, '   a b c d e f g h\n',
+                'Last move: ', str(start), ' ', str(end),
+                '\nTurn: ', str(self.turn),
+                '\nEn passant: ', str(self.en_passant),
+                '\nCastling: ', str(self.castling),
+                '\nHalfmove: ', str(self.halfmove),
+                '\nFullmove: ', str(self.fullmove),
+                '\n', str(self.current_fen), '\n'
+            ]
         )
         print(f"{message}")
 
