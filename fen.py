@@ -277,8 +277,8 @@ def get_position(fen_string, piece_count):
     counts the number of each pieces, distinguishing light/dark square bishops.
     :param fen_string: The FEN string.
     :param piece_count: A dictionary containing counts of all pieces.
-    :return: A list of lists representing the board position and a dictionary of
-    the number of each piece on the board.
+    :return: A list of lists representing the board position and a dictionary
+    of the number of each piece on the board.
     """
     position = fen_string.split(' ')[0].split('/')
     pos = []
