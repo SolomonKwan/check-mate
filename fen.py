@@ -287,27 +287,30 @@ def get_position(fen_string, piece_count):
     for item in position:
         x = 0
         rank = []
-        for item2 in item:
-            if not item2.isdigit():
-                rank.append(item2)
-                if item2 != 'B' and item2 != 'b':
-                    piece_count[item2] += 1
-                elif item2 == 'B' and ((x % 2 == 0 and y % 2 == 0) or
+        for piece in item:
+            if not piece.isdigit():
+                if piece != 'B' and piece != 'b':
+                    rank.append(piece)
+                    piece_count[piece] += 1
+                elif piece == 'B' and ((x % 2 == 0 and y % 2 == 0) or
                                        (x % 2 == 1 and y % 2 == 1)):
-                    piece_count['lB'] += 1
-                elif item2 == 'B' and ((x % 2 == 0 and y % 2 == 1) or
+                    rank.append('A')  # Light square white bishop
+                    piece_count['A'] += 1
+                elif piece == 'B' and ((x % 2 == 0 and y % 2 == 1) or
                                        (x % 2 == 1 and y % 2 == 0)):
-                    piece_count['dB'] += 1
-                elif item2 == 'b' and ((x % 2 == 0 and y % 2 == 0) or
+                    rank.append('B')  # Dark square white bishop
+                    piece_count['B'] += 1
+                elif piece == 'b' and ((x % 2 == 0 and y % 2 == 0) or
                                        (x % 2 == 1 and y % 2 == 1)):
-                    piece_count['lb'] += 1
-                elif item2 == 'b' and ((x % 2 == 0 and y % 2 == 1) or
-                                       (x % 2 == 1 and y % 2 == 0)):
-                    piece_count['db'] += 1
+                    rank.append('a')  # Light square black bishop
+                    piece_count['a'] += 1
+                else:
+                    rank.append('b')  # Dark square black bishop
+                    piece_count['b'] += 1
                 x += 1
             else:
-                rank.extend([' '] * int(item2))
-                x += int(item2)
+                rank.extend([' '] * int(piece))
+                x += int(piece)
         pos.append(rank)
         y += 1
     return pos
@@ -361,7 +364,17 @@ def get_fen(pos, turn, castling, en_passant, halfmove, fullmove):
     for rank in pos:
         space_count = 0
         for item in rank:
-            if item != ' ':
+            if item == 'A' or item == 'B':
+                if space_count != 0:
+                    fen = ''.join((fen, str(space_count)))
+                    space_count = 0
+                fen = ''.join((fen, 'B'))
+            elif item == 'a' or item == 'b':
+                if space_count != 0:
+                    fen = ''.join((fen, str(space_count)))
+                    space_count = 0
+                fen = ''.join((fen, 'b'))
+            elif item != ' ':
                 if space_count != 0:
                     fen = ''.join((fen, str(space_count)))
                     space_count = 0

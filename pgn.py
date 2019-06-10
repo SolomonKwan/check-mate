@@ -9,6 +9,10 @@ USE_FILE_AND_RANK = 3
 
 
 def set_up_pgn():
+    """
+    Sets up the framework of the pgn.
+    :return: Nothing.
+    """
     return "[Event \"The Rapture\"]\n" \
            "[Site \"Brisbane, QLD AUS\"]\n" \
            "[Date \"??\"]\n" \
@@ -37,6 +41,14 @@ def update_pgn(game, start, end):
     # The piece to move and the piece to move to
     piece = game.pos[y][x]
     end_piece = game.pos[y_new][x_new]
+    if piece == 'A' or piece == 'B':
+        piece = 'B'
+    elif piece == 'a' or piece == 'b':
+        piece = 'b'
+    if end_piece == 'A' or end_piece == 'B':
+        end_piece = 'B'
+    elif end_piece == 'a' or end_piece == 'b':
+        end_piece = 'b'
 
     # Add castling
     castling = False
@@ -250,6 +262,13 @@ def get_diagonal_attacks(pieces, end, piece, game):
 
                 if 0 <= x_new <= 7 and 0 <= y_new <= 7:
                     char = game.pos[y_new][x_new]
+
+                    # Convert bishop character
+                    if char == 'A' or char == 'B':
+                        char = 'B'
+                    elif char == 'a' or char == 'b':
+                        char = 'b'
+
                     if char == piece:
                         pieces.append((x_new, y_new))
                         break
@@ -261,7 +280,7 @@ def get_diagonal_attacks(pieces, end, piece, game):
 
 def add_check(game):
     """
-    Adds to check symbol if a king is in check.
+    Adds a check symbol if a king is in check.
     :param game: The Position instance of the game.
     :return: Nothing.
     """

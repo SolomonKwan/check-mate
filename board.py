@@ -90,8 +90,8 @@ class Position:
         :param black: A character representing if black is a human or computer.
         """
         self.piece_count = {
-            'K': 0, 'Q': 0, 'R': 0, 'dB': 0, 'lB': 0, 'N': 0, 'P': 0, 'k': 0,
-            'q': 0, 'r': 0, 'db': 0, 'lb': 0, 'n': 0, 'p': 0
+            'K': 0, 'Q': 0, 'R': 0, 'B': 0, 'A': 0, 'N': 0, 'P': 0,
+            'k': 0, 'q': 0, 'r': 0, 'b': 0, 'a': 0, 'n': 0, 'p': 0
         }
         self.pos = fen.get_position(position, self.piece_count)
         self.turn = fen.get_turn(position.split(' ')[1])
@@ -158,7 +158,10 @@ class Position:
         message = '   0 1 2 3 4 5 6 7\n'
         i = 0
         for rank in self.pos:
-            rank = ['.' if item == ' ' else item for item in rank]
+            rank = [
+                '.' if item == ' ' else 'B' if item == 'A' or item == 'B' else
+                'b' if item == 'a' or item == 'b' else item for item in rank
+            ]
             message = ' '.join(
                 [message, str(8 - i), *rank, str(i) + '\n']
             )
@@ -218,19 +221,16 @@ class Position:
         self.pos[y][x] = ' '
         if end_piece != ' ':
             # Capture move
-            if end_piece != 'B' and end_piece != 'b':
+            if end_piece.lower() != 'b' and end_piece.lower() != 'a':
                 self.piece_count[end_piece] -= 1
-            elif end_piece == 'B' and ((x_new % 2 == 0 and y_new % 2 == 0) or
-                                       (x_new % 2 == 1 and y_new % 2 == 1)):
-                self.piece_count['lB'] -= 1
-            elif end_piece == 'B' and ((x_new % 2 == 0 and y_new % 2 == 1) or
-                                       (x_new % 2 == 1 and y_new % 2 == 0)):
-                self.piece_count['dB'] -= 1
-            elif end_piece == 'b' and ((x_new % 2 == 0 and y_new % 2 == 0) or
-                                       (x_new % 2 == 1 and y_new % 2 == 1)):
-                self.piece_count['lb'] -= 1
+            elif end_piece == 'A':
+                self.piece_count['A'] -= 1  # Light square white bishop
+            elif end_piece == 'B':
+                self.piece_count['B'] -= 1  # Dark square white bishop
+            elif end_piece == 'a':
+                self.piece_count['a'] -= 1  # Light square black bishop
             else:
-                self.piece_count['db'] -= 1
+                self.piece_count['b'] -= 1  # Dark square black bishop
         self.pos[y_new][x_new] = piece
 
         # Update castling and move rook if castling
@@ -375,20 +375,20 @@ class Position:
         # Determine the queen and bishop pieces
         if self.turn:
             queen = 'q'
-            bishop = 'b'
+            bishop = ['a', 'b']
         else:
             queen = 'Q'
-            bishop = 'B'
+            bishop = ['A', 'B']
 
         for i, j in directions['b']:
             for k in range(1, 8):
                 if 0 <= x + i * k <= 7 and 0 <= y + j * k <= 7:
                     if self.pos[y + j * k][x + i * k] != ' ' and \
                             self.pos[y + j * k][x + i * k] != queen and \
-                            self.pos[y + j * k][x + i * k] != bishop:
+                            self.pos[y + j * k][x + i * k] not in bishop:
                         break
                     elif self.pos[y + j * k][x + i * k] == queen or \
-                            self.pos[y + j * k][x + i * k] == bishop:
+                            self.pos[y + j * k][x + i * k] in bishop:
                         return True
                 else:
                     break
@@ -532,11 +532,11 @@ class Position:
         # Determine the queen, bishop and rook characters
         if self.turn:
             queen = 'Q'
-            bishop = 'B'
+            bishop = ['A', 'B']
             rook = 'R'
         else:
             queen = 'q'
-            bishop = 'b'
+            bishop = ['a', 'b']
             rook = 'r'
 
         # Find the queens
@@ -549,7 +549,7 @@ class Position:
             for item in rank:
                 if item == queen:
                     queens.append((x, y))
-                if item == bishop:
+                if item in bishop:
                     bishops.append((x, y))
                 if item == rook:
                     rooks.append((x, y))
@@ -796,21 +796,24 @@ class Position:
 
             # Make the pawn promotion and update piece count
             self.piece_count[pawn] -= 1
-            self.pos[y][x] = choice
             if choice != 'B' and choice != 'b':
+                self.pos[y][x] = choice
                 self.piece_count[choice] += 1
             elif choice == 'B' and ((x % 2 == 0 and y % 2 == 0) or
                                     (x % 2 == 1 and y % 2 == 1)):
-                self.piece_count['lB'] += 1
+                self.pos[y][x] = 'A'
+                self.piece_count['A'] += 1
             elif choice == 'B' and ((x % 2 == 0 and y % 2 == 1) or
                                     (x % 2 == 1 and y % 2 == 0)):
-                self.piece_count['dB'] += 1
+                self.pos[y][x] = 'B'
+                self.piece_count['B'] += 1
             elif choice == 'b' and ((x % 2 == 0 and y % 2 == 0) or
                                     (x % 2 == 1 and y % 2 == 1)):
-                self.piece_count['lb'] += 1
-            elif choice == 'b' and ((x % 2 == 0 and y % 2 == 1) or
-                                    (x % 2 == 1 and y % 2 == 0)):
-                self.piece_count['db'] += 1
+                self.pos[y][x] = 'a'
+                self.piece_count['a'] += 1
+            else:
+                self.pos[y][x] = 'b'
+                self.piece_count['b'] += 1
 
             self.pgn = ''.join((self.pgn, '=', choice.upper()))
 
@@ -958,21 +961,21 @@ class Position:
             return True
 
         # King and bishop(s) vs king (same colour bishop(s))
-        if self.piece_count['K'] == 1 and self.piece_count['lB'] and \
+        if self.piece_count['K'] == 1 and self.piece_count['A'] and \
                 self.piece_count['k'] == 1 and (pieces_sum -
-                                                self.piece_count['lB']) == 2:
+                                                self.piece_count['A']) == 2:
             return True
-        if self.piece_count['K'] == 1 and self.piece_count['dB'] and \
+        if self.piece_count['K'] == 1 and self.piece_count['B'] and \
                 self.piece_count['k'] == 1 and (pieces_sum -
-                                                self.piece_count['dB']) == 2:
+                                                self.piece_count['B']) == 2:
             return True
         if self.piece_count['K'] == 1 and self.piece_count['k'] == 1 and \
-                self.piece_count['lb'] and (pieces_sum -
-                                            self.piece_count['lb'] == 2):
+                self.piece_count['a'] and (pieces_sum -
+                                            self.piece_count['a'] == 2):
             return True
         if self.piece_count['K'] == 1 and self.piece_count['k'] == 1 and \
-                self.piece_count['db'] and (pieces_sum -
-                                            self.piece_count['db'] == 2):
+                self.piece_count['b'] and (pieces_sum -
+                                            self.piece_count['b'] == 2):
             return True
 
         # King and knight vs King
@@ -986,17 +989,17 @@ class Position:
             return True
 
         # King and bishop(s) vs king and bishop(s) (same colour bishops)
-        if self.piece_count['K'] == 1 and self.piece_count['lB'] and \
-                self.piece_count['dB'] == 0 and self.piece_count['k'] == 1 \
-                and self.piece_count['lb'] and self.piece_count['db'] == 0 \
-                and (pieces_sum - self.piece_count['lB'] -
-                     self.piece_count['lb']) == 2:
+        if self.piece_count['K'] == 1 and self.piece_count['A'] and \
+                self.piece_count['B'] == 0 and self.piece_count['k'] == 1 \
+                and self.piece_count['a'] and self.piece_count['b'] == 0 \
+                and (pieces_sum - self.piece_count['A'] -
+                     self.piece_count['a']) == 2:
             return True
-        if self.piece_count['K'] == 1 and self.piece_count['lB'] == 0 and \
-                self.piece_count['dB'] and self.piece_count['k'] == 1 and \
-                self.piece_count['lb'] == 0 and self.piece_count['db'] and \
-                (pieces_sum - self.piece_count['dB'] -
-                 self.piece_count['db']) == 2:
+        if self.piece_count['K'] == 1 and self.piece_count['A'] == 0 and \
+                self.piece_count['B'] and self.piece_count['k'] == 1 and \
+                self.piece_count['a'] == 0 and self.piece_count['b'] and \
+                (pieces_sum - self.piece_count['b'] -
+                 self.piece_count['b']) == 2:
             return True
 
         return False
