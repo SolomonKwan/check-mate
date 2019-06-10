@@ -271,12 +271,11 @@ def check_moves(halfmoves, fullmoves):
     return error.NORMAL
 
 
-def get_position(fen_string, piece_count):
+def get_position(fen_string):
     """
     Constructs a board position from FEN. Assumes that the FEN is valid. Also
     counts the number of each pieces, distinguishing light/dark square bishops.
     :param fen_string: The FEN string.
-    :param piece_count: A dictionary containing counts of all pieces.
     :return: A list of lists representing the board position and a dictionary
     of the number of each piece on the board.
     """
@@ -291,22 +290,17 @@ def get_position(fen_string, piece_count):
             if not piece.isdigit():
                 if piece != 'B' and piece != 'b':
                     rank.append(piece)
-                    piece_count[piece] += 1
                 elif piece == 'B' and ((x % 2 == 0 and y % 2 == 0) or
                                        (x % 2 == 1 and y % 2 == 1)):
                     rank.append('A')  # Light square white bishop
-                    piece_count['A'] += 1
                 elif piece == 'B' and ((x % 2 == 0 and y % 2 == 1) or
                                        (x % 2 == 1 and y % 2 == 0)):
                     rank.append('B')  # Dark square white bishop
-                    piece_count['B'] += 1
                 elif piece == 'b' and ((x % 2 == 0 and y % 2 == 0) or
                                        (x % 2 == 1 and y % 2 == 1)):
                     rank.append('a')  # Light square black bishop
-                    piece_count['a'] += 1
                 else:
                     rank.append('b')  # Dark square black bishop
-                    piece_count['b'] += 1
                 x += 1
             else:
                 rank.extend([' '] * int(piece))

@@ -89,11 +89,7 @@ class Position:
         :param white: A character representing if white is a human or computer.
         :param black: A character representing if black is a human or computer.
         """
-        self.piece_count = {
-            'K': 0, 'Q': 0, 'R': 0, 'B': 0, 'A': 0, 'N': 0, 'P': 0,
-            'k': 0, 'q': 0, 'r': 0, 'b': 0, 'a': 0, 'n': 0, 'p': 0
-        }
-        self.pos = fen.get_position(position, self.piece_count)
+        self.pos = fen.get_position(position)
         self.turn = fen.get_turn(position.split(' ')[1])
         self.castling = fen.CASTLING_OPTIONS[position.split(' ')[2]]
         self.en_passant = fen.get_en_passant(position.split(' ')[3])
@@ -219,18 +215,6 @@ class Position:
 
         # Actually move the piece and update piece count
         self.pos[y][x] = ' '
-        if end_piece != ' ':
-            # Capture move
-            if end_piece.lower() != 'b' and end_piece.lower() != 'a':
-                self.piece_count[end_piece] -= 1
-            elif end_piece == 'A':
-                self.piece_count['A'] -= 1  # Light square white bishop
-            elif end_piece == 'B':
-                self.piece_count['B'] -= 1  # Dark square white bishop
-            elif end_piece == 'a':
-                self.piece_count['a'] -= 1  # Light square black bishop
-            else:
-                self.piece_count['b'] -= 1  # Dark square black bishop
         self.pos[y_new][x_new] = piece
 
         # Update castling and move rook if castling
@@ -264,10 +248,8 @@ class Position:
         # Remove piece captured en passant
         if en_passant:
             if self.turn:
-                self.piece_count['p'] -= 1
                 self.pos[y_new + 1][x_new] = ' '
             else:
-                self.piece_count['P'] -= 1
                 self.pos[y_new - 1][x_new] = ' '
 
         # En passant update
@@ -295,7 +277,7 @@ class Position:
         # Toggle the turn
         self.turn = 1 - self.turn
 
-        # Update FEN
+        # Update FEN. This is used to determine draw by 3 fold repetition.
         self.current_fen = fen.get_fen(self.pos, self.turn, self.castling,
                                        self.en_passant, self.halfmove,
                                        self.fullmove)
@@ -795,25 +777,19 @@ class Position:
                     choice = input('Invalid choice. Choose again: ')
 
             # Make the pawn promotion and update piece count
-            self.piece_count[pawn] -= 1
             if choice != 'B' and choice != 'b':
                 self.pos[y][x] = choice
-                self.piece_count[choice] += 1
             elif choice == 'B' and ((x % 2 == 0 and y % 2 == 0) or
                                     (x % 2 == 1 and y % 2 == 1)):
                 self.pos[y][x] = 'A'
-                self.piece_count['A'] += 1
             elif choice == 'B' and ((x % 2 == 0 and y % 2 == 1) or
                                     (x % 2 == 1 and y % 2 == 0)):
                 self.pos[y][x] = 'B'
-                self.piece_count['B'] += 1
             elif choice == 'b' and ((x % 2 == 0 and y % 2 == 0) or
                                     (x % 2 == 1 and y % 2 == 1)):
                 self.pos[y][x] = 'a'
-                self.piece_count['a'] += 1
             else:
                 self.pos[y][x] = 'b'
-                self.piece_count['b'] += 1
 
             self.pgn = ''.join((self.pgn, '=', choice.upper()))
 
@@ -953,53 +929,37 @@ class Position:
         Check for a draw by insufficient material.
         :return: True if a draw, false otherwise.
         """
-        pieces_sum = sum(self.piece_count.values())
+        counts = Counter([
+            item for rank in self.pos for item in rank if item != ' '
+        ])
+        pieces_sum = sum(counts.values())
 
         # King vs King
-        if self.piece_count['K'] == 1 and self.piece_count['k'] == 1 and \
-                pieces_sum == 2:
+        if pieces_sum == 2:
             return True
 
         # King and bishop(s) vs king (same colour bishop(s))
-        if self.piece_count['K'] == 1 and self.piece_count['A'] and \
-                self.piece_count['k'] == 1 and (pieces_sum -
-                                                self.piece_count['A']) == 2:
+        if counts['A'] and (pieces_sum - counts['A']) == 2:
             return True
-        if self.piece_count['K'] == 1 and self.piece_count['B'] and \
-                self.piece_count['k'] == 1 and (pieces_sum -
-                                                self.piece_count['B']) == 2:
+        if counts['B'] and (pieces_sum - counts['B']) == 2:
             return True
-        if self.piece_count['K'] == 1 and self.piece_count['k'] == 1 and \
-                self.piece_count['a'] and (pieces_sum -
-                                            self.piece_count['a'] == 2):
+        if counts['a'] and (pieces_sum - counts['a'] == 2):
             return True
-        if self.piece_count['K'] == 1 and self.piece_count['k'] == 1 and \
-                self.piece_count['b'] and (pieces_sum -
-                                            self.piece_count['b'] == 2):
+        if counts['b'] and (pieces_sum - counts['b'] == 2):
             return True
 
         # King and knight vs King
-        if self.piece_count['K'] == 1 and self.piece_count['N'] == 1 and \
-                self.piece_count['k'] == 1 and (pieces_sum -
-                                                self.piece_count['N'] == 2):
+        if counts['N'] == 1 and (pieces_sum - counts['N'] == 2):
             return True
-        if self.piece_count['K'] == 1 and self.piece_count['k'] == 1 and \
-                self.piece_count['n'] == 1 and (pieces_sum -
-                                                self.piece_count['n'] == 2):
+        if counts['n'] == 1 and (pieces_sum - counts['n'] == 2):
             return True
 
         # King and bishop(s) vs king and bishop(s) (same colour bishops)
-        if self.piece_count['K'] == 1 and self.piece_count['A'] and \
-                self.piece_count['B'] == 0 and self.piece_count['k'] == 1 \
-                and self.piece_count['a'] and self.piece_count['b'] == 0 \
-                and (pieces_sum - self.piece_count['A'] -
-                     self.piece_count['a']) == 2:
+        if counts['A'] and counts['a'] and (pieces_sum - counts['A'] -
+                                            counts['a']) == 2:
             return True
-        if self.piece_count['K'] == 1 and self.piece_count['A'] == 0 and \
-                self.piece_count['B'] and self.piece_count['k'] == 1 and \
-                self.piece_count['a'] == 0 and self.piece_count['b'] and \
-                (pieces_sum - self.piece_count['b'] -
-                 self.piece_count['b']) == 2:
+        if counts['B'] and counts['b'] and (pieces_sum - counts['b'] -
+                                            counts['b']) == 2:
             return True
 
         return False
