@@ -103,11 +103,9 @@ if __name__ == '__main__':
     if error_code:
         error.exit_game(error_code)
 
-    # Prep the game
-    game = board.Position(board.standard_start, white, black)
-
     # Play the game
     begin = timer()
+    game = board.Position(board.standard_start, white, black)
     error_code = run_game()
     finish = timer()
 

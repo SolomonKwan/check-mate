@@ -403,12 +403,12 @@ class Position:
             i = 1
 
         # Search for an attack from an enemy pawn
-        if 0 <= coordinates[1] + i <= 7 and 0 <= coordinates[0] - 1 <= 7:
-            if self.pos[coordinates[1] + i][coordinates[0] - 1] == pawn:
-                return True
-        if 0 <= coordinates[1] + i <= 7 and 0 <= coordinates[0] + 1 <= 7:
-            if self.pos[coordinates[1] + i][coordinates[0] + 1] == pawn:
-                return True
+        if 0 <= coordinates[1] + i <= 7 and 0 <= coordinates[0] - 1 <= 7 and \
+                self.pos[coordinates[1] + i][coordinates[0] - 1] == pawn:
+            return True
+        if 0 <= coordinates[1] + i <= 7 and 0 <= coordinates[0] + 1 <= 7 and \
+                self.pos[coordinates[1] + i][coordinates[0] + 1] == pawn:
+            return True
         return False
 
     def get_legal_moves(self):
