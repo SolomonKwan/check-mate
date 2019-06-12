@@ -14,6 +14,7 @@ Created November 2018.
     Improve the check and record board position of run_game()
     Check the light square and dark squares are correct
     Improve the human move input
+    Maybe do everything in bitboards
 """
 
 import random
