@@ -1,4 +1,4 @@
-
+import argparse
 import sys
 
 NORMAL = 0
@@ -14,21 +14,28 @@ INCORRECT_ARGS = 8
 ARGUMENT_LEN = 3
 
 
-def check_args(argv):
+def player_type(input):
+    """
+    Checks and returns a player character.
+    :param input: The input player character.
+    :return: The input character once validated.
+    """
+
+    if check_args(input) != NORMAL:
+        raise argparse.ArgumentTypeError("Invalid player option, must be 'c' or 'h'.")
+
+    return input
+
+
+def check_args(input):
     """
     Check the command line arguments.
-    :param argv: The command line arguments.
+    :param input: A player argument.
     :return: The appropriate exit code if an error occurs, else NORMAL.
     """
-    if len(argv) != ARGUMENT_LEN:
-        return INCORRECT_ARGS
+    valid_players = ["h", "c"]
 
-    player1 = argv[1]
-    player2 = argv[2]
-
-    valid_players = ['h', 'c']
-
-    if player1 not in valid_players or player2 not in valid_players:
+    if input not in valid_players:
         return INCORRECT_ARGS
 
     return NORMAL
@@ -42,23 +49,23 @@ def game_over(status):
     :return: status.
     """
     if status == NORMAL:
-        print('Normal finish')
+        print("Normal finish")
     elif status == WHITE_WINS:
-        print('Checkmate, white wins')
+        print("Checkmate, white wins")
     elif status == BLACK_WINS:
-        print('Checkmate, black wins')
+        print("Checkmate, black wins")
     elif status == STALEMATE:
-        print('Draw by stalemate')
+        print("Draw by stalemate")
     elif status == INSUFFICIENT_MATERIAL:
-        print('Draw by insufficient material')
+        print("Draw by insufficient material")
     elif status == FIFTY_MOVE_RULE:
-        print('Draw by 50-move rule')
+        print("Draw by 50-move rule")
     elif status == THREEFOLD_REPETITION:
-        print('Draw by threefold repetition')
+        print("Draw by threefold repetition")
     elif status == INVALID_FEN:
-        print('Error: Invalid FEN string', file=sys.stderr)
+        print("Error: Invalid FEN string", file=sys.stderr)
     elif status == INCORRECT_ARGS:
-        print('Usage: Chess1.0.1 whitePlayer blackPlayer', file=sys.stderr)
+        print("Usage: Chess1.0.1 whitePlayer blackPlayer", file=sys.stderr)
 
     return status
 
